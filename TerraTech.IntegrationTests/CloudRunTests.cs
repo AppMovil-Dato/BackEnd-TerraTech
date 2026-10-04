@@ -82,14 +82,14 @@ public partial class JourneyTests
     }
 
     [Fact]
-    public void CloudRunRequiresExplicitMigrationCommandEvenIfStartupMigrationEnabled()
+    public void CloudRunHonorsExplicitStartupMigrationSetting()
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "Production" });
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["K_SERVICE"] = "terratech-test", ["Database:MigrateOnStartup"] = "true"
         });
-        Assert.False(DatabaseStartup.ShouldMigrate(builder.Configuration, builder.Environment, []));
+        Assert.True(DatabaseStartup.ShouldMigrate(builder.Configuration, builder.Environment, []));
         Assert.True(DatabaseStartup.ShouldMigrate(builder.Configuration, builder.Environment, ["--migrate-only"]));
         builder.Configuration["K_SERVICE"] = "";
         builder.Configuration["Database:MigrateOnStartup"] = "false";

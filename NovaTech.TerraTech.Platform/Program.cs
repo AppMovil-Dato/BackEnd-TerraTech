@@ -260,8 +260,7 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    await MigrationPreflight.Check(context);
-    await context.Database.MigrateAsync();
+    await DatabaseInitializer.InitializeAsync(context, app.Lifetime.ApplicationStopping);
     if (args.Contains("--migrate-only")) return;
     if (await DemoCommands.Run(app, context, args)) return;
 }

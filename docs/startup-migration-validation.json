@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-04",
+  "configuration": "Debug",
+  "tests": {
+    "total": 61,
+    "passed": 61,
+    "failed": 0,
+    "database": "isolated MySQL 9.5.0"
+  },
+  "coverage": {
+    "lineRate": 0.7720999999999999,
+    "branchRate": 0.455
+  },
+  "container": {
+    "environment": "Production",
+    "platform": "linux/amd64",
+    "initialDatabaseExists": false,
+    "migrateOnStartup": true,
+    "healthReadyStatus": 200
+  },
+  "verified": [
+    "true honored in Cloud Run",
+    "missing database and complete schema created",
+    "restart preserves registered account",
+    "concurrent instances serialize initialization",
+    "existing migration and ownership regression suite passes"
+  ],
+  "remoteDeploymentVerified": false,
+  "demoDataSeededAutomatically": false
+}

@@ -18,7 +18,7 @@ dotnet run --project NovaTech.TerraTech.Platform -c Debug --no-build --no-launch
 
 Mantener la misma clave entre reinicios si se quiere conservar la validez de los tokens. JWT HS256, firma y expiración obligatorias, duración de ocho horas y validación del usuario existente. Una clave vacía o menor de 32 bytes impide iniciar. Swagger público: `/swagger/index.html`; contrato: `/swagger/v1/swagger.json`.
 
-En Development, al iniciar se ejecuta primero el diagnóstico de datos existentes y luego las migraciones pendientes. En Production y Cloud Run se ejecutan mediante el comando explícito `--migrate-only`, antes de iniciar el servicio. No se borra ni se recrea la base. Si existen referencias huérfanas o duplicados, el arranque se detiene con el diagnóstico. Ver [migraciones y despliegue](docs/DEPLOYMENT.md).
+En Development, al iniciar se ejecuta primero el diagnóstico de datos existentes y luego las migraciones pendientes. En Production y Cloud Run, `Database__MigrateOnStartup=true` crea la base si falta y aplica las migraciones al arrancar. Con `false`, se usa el comando explícito `--migrate-only`. El nombre de base y las credenciales deben estar definidos en la conexión, con permisos de creación y migración. No se borra ni se recrea la base. Si existen referencias huérfanas o duplicados, el arranque se detiene con el diagnóstico. Ver [migraciones y despliegue](docs/DEPLOYMENT.md).
 
 ## Preparar la demostración
 
@@ -82,4 +82,6 @@ Cada tipo tiene su propio archivo. Los recursos de perfil y lecturas están en `
 
 ## Cloud Run
 
-La API está preparada para Cloud Run con `PORT`, HTTPS terminado por el proxy, probes públicos y migración separada mediante Job. [Instrucciones](docs/CLOUD_RUN.md). `cloudbuild.yaml` construye/publica la imagen; el despliegue sigue siendo explícito. GitHub Actions ejecuta la suite Debug contra MySQL 8.4 aislado y construye AMD64 en cada cambio a main. La validación local pasó **59 pruebas**, más **15 pasos HTTP** dentro del contenedor Production; [evidencia](docs/cloud-run-validation.json). No se ha desplegado en GCP.
+La API está preparada para Cloud Run con `PORT`, HTTPS terminado por el proxy, probes públicos y migraciones automáticas optativas mediante `Database__MigrateOnStartup=true` (también admite Job separado). [Instrucciones](docs/CLOUD_RUN.md). `cloudbuild.yaml` construye/publica la imagen; el despliegue sigue siendo explícito. GitHub Actions ejecuta la suite Debug contra MySQL 8.4 aislado y construye AMD64 en cada cambio a main. La validación local pasó **59 pruebas**, más **15 pasos HTTP** dentro del contenedor Production; [evidencia](docs/cloud-run-validation.json). No se ha desplegado en GCP.
+
+Inicialización automática en Cloud Run: **61 pruebas Debug aprobadas**, más creación de una base inexistente y esquema desde el contenedor Production AMD64 con `Database__MigrateOnStartup=true`; [evidencia](docs/startup-migration-validation.json). La conexión debe contener un nombre de base y permisos DDL. Los datos de demostración siguen siendo explícitos.

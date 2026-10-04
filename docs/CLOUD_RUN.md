@@ -7,7 +7,7 @@ El contenedor mantiene .NET 10, EF Core y MySQL. Cloud Run aloja la API; la base
 - Imagen publicada exclusivamente en **Debug**, para `linux/amd64`, con usuario no root.
 - Escucha HTTP en `0.0.0.0:$PORT` (8080 por defecto en el Dockerfile). Un puerto inválido detiene el proceso.
 - Cloud Run termina TLS. No se redirige el HTTP interno a HTTPS. En Cloud Run (`K_SERVICE`), solo se procesa `X-Forwarded-Proto` para construir URLs HTTPS; no se confía en hosts ni IPs reenviados.
-- En Production no se migra al arrancar. Con `K_SERVICE`, tampoco se permite activar migraciones automáticas por configuración. Se usa un Job explícito con `--migrate-only`, preflight y salida 0 al terminar; un fallo devuelve salida distinta de 0.
+- Con `Database__MigrateOnStartup=true`, también en Cloud Run/Production, se crea la base si falta, se comprueban los datos existentes y se aplican las migraciones antes de servir HTTP. Un bloqueo MySQL por nombre de base serializa arranques concurrentes. Con `false`, se usa un Job explícito con `--migrate-only`. El valor predeterminado en Production sigue siendo `false`.
 - `/health/live`: proceso disponible, sin depender de la base. `/health/ready`: conexión MySQL y ausencia de migraciones pendientes; devuelve 503 si falla. Son anónimos y no exponen diagnósticos internos.
 - Swagger y registro/login siguen públicos; el resto mantiene JWT y propiedad. El acceso público de Cloud Run permite llegar a estos endpoints; no sustituye la autorización de la API.
 - Sin persistencia en disco local ni datos de demostración automáticos. Los comandos demo siguen bloqueados en Production.
@@ -16,7 +16,7 @@ El contenedor mantiene .NET 10, EF Core y MySQL. Cloud Run aloja la API; la base
 
 Elegir proyecto, región, base MySQL y cuenta de servicio. Habilitar Cloud Run, Cloud Build, Artifact Registry, Secret Manager y, si corresponde, Cloud SQL Admin. Crear el repositorio Docker de Artifact Registry. Estos pasos y los comandos siguientes pueden generar cargos; aquí se documentan, no se ejecutan automáticamente.
 
-Crear dos usuarios MySQL: migrador con permisos DDL y runtime con permisos de lectura/escritura sobre la base y lectura de `__EFMigrationsHistory`. Respaldar cualquier base existente. No ejecutar dos migradores simultáneos ni migrar mientras otras revisiones escriben durante cambios incompatibles.
+Para la creación automática, el usuario de la conexión de la API necesita permisos para crear la base y aplicar DDL, además de leer/escribir los datos. El nombre de base (por ejemplo `terratech` o `defaultdb` en Aiven) debe estar definido aunque la base aún no exista. No dejar la cadena de conexión vacía. Si se elige un Job separado, crear dos usuarios MySQL: migrador con permisos DDL y runtime con permisos de lectura/escritura sobre la base y lectura de `__EFMigrationsHistory`. Respaldar cualquier base existente. No ejecutar dos migradores simultáneos ni migrar mientras otras revisiones escriben durante cambios incompatibles.
 
 Guardar en Secret Manager:
 
@@ -62,9 +62,9 @@ gcloud builds submit --project "$GCP_PROJECT" --config cloudbuild.yaml \
 
 Alternativa local: `docker build --platform=linux/amd64 -t terratech-cloud-run:debug .`. No construir solo ARM64 desde un Mac: Cloud Run requiere una imagen compatible con AMD64.
 
-## Migrar primero con un Job
+## Alternativa: migrar con un Job separado
 
-Estos ejemplos usan Cloud SQL. Si se elige otra base, quitar los flags `--set-cloudsql-instances`/`--add-cloudsql-instances` y configurar su conectividad para el servicio **y** el Job.
+Si usas `Database__MigrateOnStartup=true`, puedes omitir el Job: la API inicializa el esquema. Estos ejemplos de Job usan Cloud SQL. Si se elige otra base, quitar los flags `--set-cloudsql-instances`/`--add-cloudsql-instances` y configurar su conectividad para el servicio **y** el Job.
 
 Se fijan versiones numéricas de secretos (ejemplo `1`); sustituirlas por las versiones válidas. No usar `latest` para una revisión que deba ser reproducible.
 
@@ -91,12 +91,14 @@ gcloud run deploy terratech-api --project "$GCP_PROJECT" --region "$GCP_REGION" 
   --image "$API_IMAGE" --service-account "$RUNTIME_SA" --execution-environment=gen2 \
   --allow-unauthenticated --port=8080 --cpu=1 --memory=512Mi \
   --min=0 --max=1 --concurrency=10 --timeout=60s \
-  --set-env-vars=ASPNETCORE_ENVIRONMENT=Production,Database__MigrateOnStartup=false \
+  --set-env-vars=ASPNETCORE_ENVIRONMENT=Production,Database__MigrateOnStartup=true \
   --set-secrets=TokenSettings__Secret=terratech-jwt:1,ConnectionStrings__DefaultConnection=terratech-db-runtime:1 \
   --add-cloudsql-instances "$SQL_INSTANCE" \
   --startup-probe='httpGet.path=/health/ready,httpGet.port=8080,timeoutSeconds=5,periodSeconds=10,failureThreshold=12' \
   --liveness-probe='httpGet.path=/health/live,httpGet.port=8080,timeoutSeconds=5,periodSeconds=30,failureThreshold=3'
 ```
+
+Con creación automática, `terratech-db-runtime` debe contener un usuario con permisos DDL. Si ya ejecutaste el Job con un usuario separado, configura `Database__MigrateOnStartup=false` para mantener el usuario runtime limitado.
 
 La prueba de arranque verifica base y esquema; la de liveness evita reiniciar por una caída transitoria de MySQL. `/health/ready` queda disponible para monitoreo posterior.
 

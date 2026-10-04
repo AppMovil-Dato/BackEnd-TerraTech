@@ -9,10 +9,6 @@ using NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Transform;
 using NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Aggregates;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 namespace NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST;
-public record RegisterSensorResource([Required, RegularExpression("^TT-[0-9A-Z]{6}$")] string SensorCode, [Range(1, int.MaxValue)] int FieldId, [Required, MaxLength(100)] string Name);
-public record ReadingResource(int Id, int DeviceId, DateTime RecordedAt, double MoisturePercent, double SoilTemperatureC, double NitrogenPpm, double PhosphorusPpm, double PotassiumPpm, string Source);
-public record LatestReadingResource(ReadingResource Reading, bool IsStale);
-public record ReadingHistoryResource(int DeviceId, DateTime FromUtc, DateTime ToUtc, double MinimumMoisturePercent, IReadOnlyList<ReadingResource> Readings);
 [ApiController, Route("api/v1/devices")]
 public class SensorReadingsController(NovaTech.TerraTech.Platform.Monitoring.Application.Internal.QueryServices.SensorReadingQueryService queries, SensorRegistrationService registration) : ControllerBase
 {

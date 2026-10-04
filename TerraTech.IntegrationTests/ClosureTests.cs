@@ -10,12 +10,6 @@ using NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates;
 using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates;
 using Xunit;
 
-public sealed class ControlledClock : TimeProvider
-{
-    public DateTimeOffset? Frozen { get; set; }
-    public override DateTimeOffset GetUtcNow() => Frozen ?? DateTimeOffset.UtcNow;
-}
-
 public partial class JourneyTests
 {
     private static Dictionary<string, object?> Registration(string? email = null) => new()

@@ -28,3 +28,5 @@ python3 scripts/demo-journey.py --base-url http://localhost:8080
 El script invoca comandos Debug explícitos, crea una cuenta temporal y elige uno de los cinco sensores de demostración disponibles. Se limita a localhost y exige Development. Conserva asociaciones previas; si todos los sensores están ocupados, solicita otra base aislada/provisión. Los correos y contraseñas de prueba no son cuentas sembradas ni se usan en producción.
 
 Revalidación antes de subir a GitHub: **49 pruebas Debug aprobadas, cero fallos y cero omitidas**, sobre MySQL aislado y bases nuevas. [Resultado](push-validation.json). Esta ejecución no volvió a medir cobertura; los porcentajes anteriores corresponden a la ejecución instrumentada indicada arriba.
+
+Refactor de organización: recursos, handler de excepciones, resultados y fixtures en archivos separados. Las **49 pruebas Debug** vuelven a pasar tras el refactor; [evidencia](modularity-validation.json). Los contratos HTTP y la semántica de los endpoints se conservan.

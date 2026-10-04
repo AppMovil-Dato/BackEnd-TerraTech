@@ -1,0 +1,14 @@
+{
+  "configuration": "Debug",
+  "database": "isolated MySQL localhost:33308; new UUID databases",
+  "testsPassed": 49,
+  "testsFailed": 0,
+  "testsSkipped": 0,
+  "testsTotal": 49,
+  "startedAtUtc": "2026-10-04T11:25:31.0592720-05:00",
+  "finishedAtUtc": "2026-10-04T11:25:58.1690130-05:00",
+  "coverageRerun": false,
+  "reason": "Resources, exception handler, generic result and test fixtures separated into their own files",
+  "openApiUnchanged": true,
+  "openApiOperations": 60
+}

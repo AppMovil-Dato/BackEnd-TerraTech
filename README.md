@@ -75,3 +75,7 @@ Microsoft.OpenApi se fija en 2.7.5, la versión corregida mínima de la línea 2
 ## Límites de esta entrega
 
 No incluye Android, verificación de correo, recuperación de contraseña, IA, recomendaciones, electroválvulas, clima, compras nuevas ni notificaciones push. Los reportes estadísticos anteriores conservan su significado y no reemplazan las mediciones. El backend queda preparado para revisión del despliegue; no se ha publicado ni elegido proveedor.
+
+## Organización de clases
+
+Cada tipo tiene su propio archivo. Los recursos de perfil y lecturas están en `Interfaces/REST/Resources` de su contexto; los controladores contienen las acciones HTTP. `ApiFailure` y `ApiExceptionHandler` están separados, al igual que `Result` y `Result<T>`. Los fixtures de integración (`TestServer`, `ControlledClock`) también tienen archivos propios. La separación se validó con las 49 pruebas Debug contra MySQL aislado; [resultado](docs/modularity-validation.json).

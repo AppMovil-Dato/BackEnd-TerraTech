@@ -1,3 +1,5 @@
+using NovaTech.TerraTech.Platform.Shared.Infrastructure.Hosting;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using NovaTech.TerraTech.Platform.NotificationManagement.Application.Services;
 using NovaTech.TerraTech.Platform.NotificationManagement.Domain.Repositories;
 using NovaTech.TerraTech.Platform.NotificationManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
@@ -67,6 +69,8 @@ using NovaTech.TerraTech.Platform.CommunityManagement.Infrastructure.Persistence
 
 
 var builder = WebApplication.CreateBuilder(args);
+builder.ConfigureCloudRun();
+builder.Services.AddHealthChecks().AddCheck<DatabaseReadinessCheck>("database", tags: ["ready"]);
 
 // Add services to the container.
 
@@ -250,7 +254,8 @@ builder.Services.AddCortexMediator([typeof(Program)]);
 var app = builder.Build();
 if (!app.Environment.IsDevelopment() && args.Any(x => x.StartsWith("--demo-"))) throw new InvalidOperationException("Demo commands are allowed only in Development.");
 
-// Ensure database is created and all tables are created automatically
+// Apply schema changes only in an explicit migration job or opted-in local startup.
+if (DatabaseStartup.ShouldMigrate(app.Configuration, app.Environment, args))
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -260,6 +265,9 @@ using (var scope = app.Services.CreateScope())
     if (args.Contains("--migrate-only")) return;
     if (await DemoCommands.Run(app, context, args)) return;
 }
+
+// Cloud Run terminates HTTPS; honor its forwarded scheme before generating URLs.
+if (CloudRunConfiguration.IsCloudRunService(app.Configuration)) app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
@@ -288,7 +296,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAllPolicy");
 
 // Add Authorization Middleware to Pipeline
-app.UseHttpsRedirection();
+// Cloud Run terminates HTTPS at its ingress; the container serves HTTP.
 
 app.UseRouting();
 app.Use(async (context, next) => { if (context.GetEndpoint() == null) { await Results.Problem(statusCode: 404, title: "Route was not found.").ExecuteAsync(context); return; } await next(); });
@@ -300,6 +308,8 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") }).AllowAnonymous();
 app.MapControllers();
 
 app.Run();

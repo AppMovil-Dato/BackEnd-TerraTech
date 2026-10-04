@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-04",
+  "configuration": "Debug",
+  "target": "Cloud Run",
+  "deployedToGcp": false,
+  "integrationTests": {
+    "passed": 59,
+    "failed": 0,
+    "total": 59,
+    "database": "isolated local MySQL 9.5.0",
+    "coverage": {
+      "lineRate": 0.7722,
+      "branchRate": 0.4582,
+      "excludes": "migrations and generated code",
+      "functionalScopePercentage": null
+    }
+  },
+  "container": {
+    "build": "passed",
+    "platform": "linux/amd64",
+    "user": "1654",
+    "environment": "Production",
+    "port": "9090 (non-default PORT verified)",
+    "migrationCommandExit": 0,
+    "httpSmoke": [
+      {
+        "path": "/health/live",
+        "status": 200
+      },
+      {
+        "path": "/health/ready",
+        "status": 200
+      },
+      {
+        "path": "/swagger/v1/swagger.json",
+        "status": 200
+      },
+      {
+        "path": "/api/v1/users/me",
+        "status": 401
+      },
+      {
+        "path": "/does-not-exist",
+        "status": 404
+      }
+    ],
+    "tb1Journey": {
+      "stepsPassed": 15,
+      "monthReadings": 720
+    }
+  },
+  "limits": [
+    "GCP deployment and IAM not executed",
+    "Remote database not provisioned",
+    "GitHub Actions workflow configured; remote run not yet verified",
+    "Existing compiler warnings remain"
+  ]
+}

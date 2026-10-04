@@ -1,6 +1,6 @@
-# Migraciones y despliegue pendiente de revisión
+# Migraciones y despliegue
 
-No se ha publicado esta implementación. El proveedor y la base remota se elegirán después.
+El destino de la API es Cloud Run. No se ha publicado esta implementación ni creado la base remota. Ver [Cloud Run](CLOUD_RUN.md) para los comandos, secretos y Job migrador.
 
 ## Base existente
 
@@ -28,6 +28,6 @@ MySQL puede confirmar DDL por operación: realizar el respaldo y resolver prefli
 - Swagger seguirá público. Registro/login anónimos; resto según autorización documentada.
 - Respaldar, ejecutar preflight/migración, iniciar API, ejecutar recorrido de verificación con cuenta temporal y revisar errores sanitizados.
 
-Dockerfile preparado para publicar **Debug**, escuchar 8080 y ejecutar sin usuario root. Construcción a revisar: `docker build -t terratech-tb1 .`; pasar secretos al arrancar, nunca en capas de imagen ni archivos versionados. No se construyó ni publicó la imagen en esta implementación.
+Dockerfile preparado para publicar **Debug**, escuchar `PORT` (8080 por defecto) y ejecutar sin usuario root. Production no ejecuta migraciones al arrancar; usar `--migrate-only` antes del servicio. Construcción a revisar: `docker build -t terratech-tb1 .`; pasar secretos al arrancar, nunca en capas de imagen ni archivos versionados. La validación local y sus límites se registran en [validación Cloud Run](cloud-run-validation.json); no se publicó en GCP.
 
 Los comandos `--demo-catalog` y `--demo-readings` solo están disponibles en Development y fallan en Production antes de migrar. Para una demostración remota con datos simulados habrá que acordar expresamente el entorno y la provisión; no habilitar siembras automáticas al desplegar.

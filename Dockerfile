@@ -3,7 +3,7 @@ WORKDIR /app
 COPY NovaTech.TerraTech.Platform/*.csproj NovaTech.TerraTech.Platform/
 RUN dotnet restore ./NovaTech.TerraTech.Platform
 COPY . .
-RUN dotnet publish ./NovaTech.TerraTech.Platform -c Debug -o out
+RUN dotnet publish ./NovaTech.TerraTech.Platform -c Debug --no-restore -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app

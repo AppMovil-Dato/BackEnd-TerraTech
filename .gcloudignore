@@ -1,0 +1,9 @@
+.gcloudignore
+.git
+.gitignore
+.codegraph
+**/bin
+**/obj
+TestResults
+.env
+.env.*

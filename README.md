@@ -18,7 +18,7 @@ dotnet run --project NovaTech.TerraTech.Platform -c Debug --no-build --no-launch
 
 Mantener la misma clave entre reinicios si se quiere conservar la validez de los tokens. JWT HS256, firma y expiración obligatorias, duración de ocho horas y validación del usuario existente. Una clave vacía o menor de 32 bytes impide iniciar. Swagger público: `/swagger/index.html`; contrato: `/swagger/v1/swagger.json`.
 
-Al iniciar se ejecuta primero el diagnóstico de datos existentes y luego las migraciones pendientes. No se borra ni se recrea la base. Si existen referencias huérfanas o duplicados, el arranque se detiene con el diagnóstico. Ver [migraciones y despliegue](docs/DEPLOYMENT.md).
+En Development, al iniciar se ejecuta primero el diagnóstico de datos existentes y luego las migraciones pendientes. En Production y Cloud Run se ejecutan mediante el comando explícito `--migrate-only`, antes de iniciar el servicio. No se borra ni se recrea la base. Si existen referencias huérfanas o duplicados, el arranque se detiene con el diagnóstico. Ver [migraciones y despliegue](docs/DEPLOYMENT.md).
 
 ## Preparar la demostración
 
@@ -74,8 +74,12 @@ Microsoft.OpenApi se fija en 2.7.5, la versión corregida mínima de la línea 2
 
 ## Límites de esta entrega
 
-No incluye Android, verificación de correo, recuperación de contraseña, IA, recomendaciones, electroválvulas, clima, compras nuevas ni notificaciones push. Los reportes estadísticos anteriores conservan su significado y no reemplazan las mediciones. El backend queda preparado para revisión del despliegue; no se ha publicado ni elegido proveedor.
+No incluye Android, verificación de correo, recuperación de contraseña, IA, recomendaciones, electroválvulas, clima, compras nuevas ni notificaciones push. Los reportes estadísticos anteriores conservan su significado y no reemplazan las mediciones. El backend está preparado para Cloud Run; no se ha desplegado ni creado una base remota. Ver [guía Cloud Run](docs/CLOUD_RUN.md), con construcción AMD64 en Debug, secretos, Job migrador y probes de salud.
 
 ## Organización de clases
 
 Cada tipo tiene su propio archivo. Los recursos de perfil y lecturas están en `Interfaces/REST/Resources` de su contexto; los controladores contienen las acciones HTTP. `ApiFailure` y `ApiExceptionHandler` están separados, al igual que `Result` y `Result<T>`. Los fixtures de integración (`TestServer`, `ControlledClock`) también tienen archivos propios. La separación se validó con las 49 pruebas Debug contra MySQL aislado; [resultado](docs/modularity-validation.json).
+
+## Cloud Run
+
+La API está preparada para Cloud Run con `PORT`, HTTPS terminado por el proxy, probes públicos y migración separada mediante Job. [Instrucciones](docs/CLOUD_RUN.md). `cloudbuild.yaml` construye/publica la imagen; el despliegue sigue siendo explícito. GitHub Actions ejecuta la suite Debug contra MySQL 8.4 aislado y construye AMD64 en cada cambio a main. La validación local pasó **59 pruebas**, más **15 pasos HTTP** dentro del contenedor Production; [evidencia](docs/cloud-run-validation.json). No se ha desplegado en GCP.

@@ -1,0 +1,16 @@
+# Builds and publishes the image only. Deploy and migrations are explicit steps.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --platform=linux/amd64
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/terratech-api:${_TAG}
+      - .
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/terratech-api:${_TAG}
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: terratech
+  _TAG: dev
+options:
+  logging: CLOUD_LOGGING_ONLY

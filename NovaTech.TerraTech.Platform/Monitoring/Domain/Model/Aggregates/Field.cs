@@ -23,8 +23,11 @@ public partial class Field
         SizeM2 = command.SizeM2;
         SoilType = command.SoilType;
         LocationLatLong = command.LocationLatLong;
+        CropName = command.CropName;
     }
     
+    public string? CropName { get; private set; }
+    public void SetCrop(string? name) => CropName = name?.Trim();
     public int Id { get; private set; }
     public ProfileId ProfileId { get; private set; }
     public FieldName Name { get; private set; }
@@ -38,5 +41,6 @@ public partial class Field
         SizeM2 = command.SizeM2;
         SoilType = command.SoilType;
         LocationLatLong = command.LocationLatLong;
+        CropName = command.CropName;
     }
 }

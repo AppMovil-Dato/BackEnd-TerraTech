@@ -12,6 +12,6 @@ public static class ProfileResourceFromEntityAssembler
             entity.FundoNameString,
             entity.ContactPhoneString, 
             entity.MoistureThresholdValue, 
-            entity.TempThresholdValue
+            entity.TempThresholdValue, entity.Location, entity.SizeM2
         );
 }

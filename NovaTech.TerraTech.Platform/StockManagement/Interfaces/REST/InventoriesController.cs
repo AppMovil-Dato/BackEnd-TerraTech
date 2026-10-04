@@ -45,6 +45,7 @@ public class InventoriesController(
                     detail: "An unexpected error occurred while processing your request", statusCode: 500)
             };
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating inventory");
@@ -73,6 +74,7 @@ public class InventoriesController(
             return (StockError)result.Error == StockError.NotFound ? NotFound() : 
                 Problem(title: "Unexpected server error", statusCode: 500);
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error updating inventory {Id}", id);

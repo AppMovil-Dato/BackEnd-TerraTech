@@ -1,4 +1,4 @@
-﻿using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates;
+using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates;
 using NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Resources;
 
 namespace NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Transform;
@@ -32,7 +32,7 @@ public static class DeviceResourceFromEntityAssembler
             fieldId,
             macAddress,
             status,
-            lastSync
+            lastSync, entity.SensorCode, entity.Name
         );
     }
 }

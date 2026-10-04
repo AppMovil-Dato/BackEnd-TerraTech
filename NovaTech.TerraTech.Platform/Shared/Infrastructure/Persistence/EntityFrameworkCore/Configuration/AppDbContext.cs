@@ -15,8 +15,9 @@ namespace NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFr
 /// <summary>
 ///     Application database context
 /// </summary>
-public class AppDbContext(DbContextOptions options) : DbContext(options)
+public class AppDbContext(DbContextOptions options, IHttpContextAccessor? accessor = null) : DbContext(options)
 {
+    public int CurrentUserId => accessor?.HttpContext?.User.UserId() ?? 0;
     /// <inheritdoc />
     protected override void OnConfiguring(DbContextOptionsBuilder builder)
     {
@@ -53,6 +54,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         // Stock Management Context
         builder.ApplyStockConfiguration();
         
+        builder.ConfigureTb1(this);
         // General Naming Convention for the database objects
         builder.UseSnakeCaseNamingConvention();
     }

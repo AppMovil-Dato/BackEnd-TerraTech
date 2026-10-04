@@ -23,13 +23,14 @@ public class BaseRepository<TEntity>(AppDbContext context) : IBaseRepository<TEn
     /// <inheritdoc />
     public async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
+        if (entity is NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Aggregates.Inventory inventory) inventory.AssignOwner(Context.CurrentUserId);
         await Context.Set<TEntity>().AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<TEntity?> FindByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await Context.Set<TEntity>().FindAsync([id], cancellationToken);
+        return await Context.Set<TEntity>().FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id, cancellationToken);
     }
 
     /// <inheritdoc />

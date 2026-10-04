@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NovaTech.TerraTech.Platform.CommunityManagement.Application.Errors;
 using NovaTech.TerraTech.Platform.CommunityManagement.Application.Services;
@@ -41,6 +42,7 @@ public class CommentsController(
                 _ => Problem(title: "Unexpected server error", detail: "An unexpected error occurred", statusCode: 500)
             };
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating comment");
@@ -48,6 +50,7 @@ public class CommentsController(
         }
     }
 
+    [AllowAnonymous]
     [HttpGet("~/api/v1/community-profiles/{targetProfileId}/comments")]
     [SwaggerOperation(Summary = "Gets comments by target profile")]
     [SwaggerResponse(200, "Comments retrieved", typeof(IEnumerable<CommentResource>))]
@@ -59,6 +62,7 @@ public class CommentsController(
         return Ok(resources);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Gets a comment by id")]
     [SwaggerResponse(200, "Comment found", typeof(CommentResource))]
@@ -95,6 +99,7 @@ public class CommentsController(
             return (CommunityError)result.Error == CommunityError.NotFound ? NotFound("Comment not found") : 
                 Problem(title: "Unexpected server error", statusCode: 500);
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error updating comment {Id}", id);

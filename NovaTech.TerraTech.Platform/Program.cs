@@ -41,7 +41,12 @@ using NovaTech.TerraTech.Platform.Iam.Application.QueryServices;
 using NovaTech.TerraTech.Platform.Iam.Domain.Repository;
 using NovaTech.TerraTech.Platform.Iam.Infrastructure.Hashing.BCrypt.Services;
 using NovaTech.TerraTech.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
-using NovaTech.TerraTech.Platform.Iam.Infrastructure.Pipeline.Middleware.Extensions;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
+using NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates;
 using NovaTech.TerraTech.Platform.Iam.Infrastructure.Tokens.Jwt.Configuration;
 using NovaTech.TerraTech.Platform.Iam.Infrastructure.Tokens.Jwt.Services;
 using NovaTech.TerraTech.Platform.Iam.Interface.Acl;
@@ -66,11 +71,46 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
-builder.Services.AddControllers(options => options.Conventions.Add(new KebabCaseRouteNamingConvention()))
+builder.Services.AddControllers(options => { options.Conventions.Add(new KebabCaseRouteNamingConvention()); options.Filters.Add<OwnershipFilter>(); })
     .AddDataAnnotationsLocalization();
 
 // Add ProblemDetails services
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<OwnershipFilter>();
+builder.Services.AddScoped<SensorRegistrationService>();
+builder.Services.AddScoped<ISensorDataRepository, SensorDataRepository>();
+builder.Services.AddScoped<SensorReadingQueryService>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<SelfProfileService>();
+var jwtSecret = builder.Configuration["TokenSettings:Secret"];
+if (string.IsNullOrWhiteSpace(jwtSecret) || Encoding.UTF8.GetByteCount(jwtSecret) < 32)
+    throw new InvalidOperationException("Set TokenSettings__Secret to a secure key of at least 32 UTF-8 bytes.");
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.MapInboundClaims = false;
+    options.TokenValidationParameters = new TokenValidationParameters {
+        ValidateIssuerSigningKey = true, IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        ValidateLifetime = true, RequireExpirationTime = true, RequireSignedTokens = true,
+        ValidAlgorithms = [SecurityAlgorithms.HmacSha256], ValidateIssuer = false, ValidateAudience = false, ClockSkew = TimeSpan.Zero
+    };
+    options.Events = new JwtBearerEvents {
+        OnAuthenticationFailed = context => { context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>().LogWarning("JWT rejected: {FailureType}", context.Exception.GetType().Name); return Task.CompletedTask; },
+        OnTokenValidated = async context => {
+            var id = context.Principal!.UserId();
+            var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+            if (id <= 0 || !await db.Set<User>().AnyAsync(u => u.Id == id, context.HttpContext.RequestAborted)) context.Fail("Unknown user.");
+        },
+        OnChallenge = async context => {
+            context.HandleResponse(); context.Response.StatusCode = 401;
+            context.Response.Headers.WWWAuthenticate = "Bearer";
+            await Results.Problem(statusCode: 401, title: "Authentication required.", extensions: new Dictionary<string, object?> { ["code"] = "UNAUTHENTICATED" }).ExecuteAsync(context.HttpContext);
+        }
+    };
+});
+builder.Services.AddAuthorization(options => options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
 
 // Add CORS Policy
@@ -99,8 +139,7 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
         .UseLoggerFactory(serviceProvider.GetRequiredService<ILoggerFactory>())
         .EnableDetailedErrors();
 
-    if (builder.Environment.IsDevelopment())
-        options.EnableSensitiveDataLogging();
+
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -121,7 +160,6 @@ builder.Services.AddSwaggerGen(options =>
             Title = "NovaTech.TerraTech.Platform",
             Version = "v1",
             Description = "TerraTech Web Service Platform API",
-            TermsOfService = new Uri("https://acme-learning.com/tos"),
             Contact = new OpenApiContact
             {
                 Name = "NovaTech",
@@ -144,6 +182,8 @@ builder.Services.AddSwaggerGen(options =>
     options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
         { [new OpenApiSecuritySchemeReference("Bearer", document)] = [] });
     options.EnableAnnotations();
+    options.OperationFilter<SwaggerSecurityFilter>();
+    options.SchemaFilter<RecordRequiredSchemaFilter>();
 });
 
 // Configure Dependency Injection
@@ -208,13 +248,17 @@ builder.Services.AddScoped(typeof(ICommandPipelineBehavior<>), typeof(LoggingCom
 builder.Services.AddCortexMediator([typeof(Program)]);
 
 var app = builder.Build();
+if (!app.Environment.IsDevelopment() && args.Any(x => x.StartsWith("--demo-"))) throw new InvalidOperationException("Demo commands are allowed only in Development.");
 
 // Ensure database is created and all tables are created automatically
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    context.Database.Migrate();
+    await MigrationPreflight.Check(context);
+    await context.Database.MigrateAsync();
+    if (args.Contains("--migrate-only")) return;
+    if (await DemoCommands.Run(app, context, args)) return;
 }
 
 // Configure the HTTP request pipeline.
@@ -246,10 +290,17 @@ app.UseCors("AllowAllPolicy");
 // Add Authorization Middleware to Pipeline
 app.UseHttpsRedirection();
 
-app.UserRequestAuthorization();
+app.UseRouting();
+app.Use(async (context, next) => { if (context.GetEndpoint() == null) { await Results.Problem(statusCode: 404, title: "Route was not found.").ExecuteAsync(context); return; } await next(); });
+app.UseStatusCodePages(async context => {
+    var status = context.HttpContext.Response.StatusCode;
+    await Results.Problem(statusCode: status, title: status == 404 ? "Route was not found." : "Request failed.").ExecuteAsync(context.HttpContext);
+});
+app.UseAuthentication();
 
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+public partial class Program { }

@@ -21,8 +21,11 @@ public record CreateFieldResource(
     [SwaggerParameter(Description = "Soil type (max 50 characters)")] string SoilType,
     
     [Required]
+    [Range(-90, 90)]
     [SwaggerParameter(Description = "Latitude coordinate (-90 to 90)")] double Latitude,
     
     [Required]
-    [SwaggerParameter(Description = "Longitude coordinate (-180 to 180)")] double Longitude
+    [Range(-180, 180)]
+    [SwaggerParameter(Description = "Longitude coordinate (-180 to 180)")] double Longitude,
+    [MaxLength(100)] string? CropName = null
 );

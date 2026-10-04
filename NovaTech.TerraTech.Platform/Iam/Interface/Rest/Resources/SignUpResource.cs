@@ -1,6 +1,3 @@
+using System.ComponentModel.DataAnnotations;
 namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest.Resources;
-
-/// <summary>
-///     Represents the inbound data required to register a new user.
-/// </summary>
-public record SignUpResource(string EmailAddress, string Password);
+public record SignUpResource([Required, EmailAddress, MaxLength(255)] string EmailAddress, [Required, MinLength(6), MaxLength(128)] string Password, [Required, MinLength(2), MaxLength(150)] string FullName, [Required] string ConfirmPassword);

@@ -31,7 +31,8 @@ public static class FieldResourceFromEntityAssembler
             sizeM2,
             soilType,
             latitude,
-            longitude
+            longitude,
+            entity.CropName
         );
     }
 }

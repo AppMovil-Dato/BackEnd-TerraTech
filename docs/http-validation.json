@@ -1,0 +1,110 @@
+{
+  "baseUrl": "http://127.0.0.1:55023",
+  "steps": [
+    {
+      "method": "POST",
+      "route": "/api/v1/authentication/sign-up",
+      "status": 400,
+      "expected": 400
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/authentication/sign-up",
+      "status": 201,
+      "expected": 201
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/authentication/sign-in",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/users/me",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/profiles/me",
+      "status": 404,
+      "expected": 404
+    },
+    {
+      "method": "PUT",
+      "route": "/api/v1/profiles/me",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/fields",
+      "status": 201,
+      "expected": 201
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/fields",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/devices/register",
+      "status": 201,
+      "expected": 201
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/fields/2/devices",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/devices/2/readings/latest",
+      "status": 404,
+      "expected": 404
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/devices/2/readings/latest",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/devices/2/readings?days=7",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/devices/2/readings?days=30",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/devices/2/readings/1440",
+      "status": 200,
+      "expected": 200
+    }
+  ],
+  "userId": 4,
+  "profileId": 2,
+  "fieldId": 2,
+  "deviceId": 2,
+  "sensorCode": "TT-ZZZ002",
+  "readingId": 1440,
+  "confirmationValidated": true,
+  "parcelSelectionValidated": true,
+  "detailMatchesCachedResource": true,
+  "weekReadings": 168,
+  "monthReadings": 720,
+  "source": "SIMULATED",
+  "latestRecordedAt": "2026-10-04T03:00:00Z",
+  "isStale": true,
+  "credentialsRecorded": false
+}

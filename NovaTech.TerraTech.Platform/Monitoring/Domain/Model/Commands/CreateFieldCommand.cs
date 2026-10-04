@@ -7,5 +7,5 @@ public record CreateFieldCommand(
     FieldName Name,
     SizeM2 SizeM2,
     SoilType SoilType,
-    LocationLatLong LocationLatLong
+    LocationLatLong LocationLatLong, string? CropName = null
 );

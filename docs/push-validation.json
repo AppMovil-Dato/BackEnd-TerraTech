@@ -1,0 +1,11 @@
+{
+  "configuration": "Debug",
+  "database": "isolated MySQL localhost:33308; new UUID databases",
+  "testsPassed": 49,
+  "testsFailed": 0,
+  "testsSkipped": 0,
+  "testsTotal": 49,
+  "startedAtUtc": "2026-10-04T11:10:09.1559020-05:00",
+  "finishedAtUtc": "2026-10-04T11:10:28.5338130-05:00",
+  "coverageRerun": false
+}

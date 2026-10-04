@@ -13,44 +13,13 @@ namespace NovaTech.TerraTech.Platform.Monitoring.Application.Internal.CommandSer
 public class DeviceCommandService(
     IDeviceRepository deviceRepository,
     IUnitOfWork unitOfWork,
-    ILogger<DeviceCommandService> logger)
+    ILogger<DeviceCommandService> logger, SensorRegistrationService registration)
     : IDeviceCommandService
 {
     public async Task<Result<Device>> Handle(CreateDeviceCommand command, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var exists = await deviceRepository.ExistsByMacAddressAsync(command.MacAddress, cancellationToken);
-            if (exists)
-            {
-                logger.LogWarning("Device with MAC {MacAddress} already exists", command.MacAddress);
-                return Result<Device>.Failure(
-                    CreateDeviceError.DuplicateDevice,
-                    $"A device with MAC address {command.MacAddress} already exists.");
-            }
-            
-            var device = new Device(command);
-            await deviceRepository.AddAsync(device, cancellationToken);
-            await unitOfWork.CompleteAsync(cancellationToken);
-            
-            logger.LogInformation("Device created successfully with ID {Id}", device.Id);
-            return Result<Device>.Success(device);
-        }
-        catch (ArgumentException ex)
-        {
-            logger.LogWarning(ex, "Invalid arguments while creating device");
-            return Result<Device>.Failure(CreateDeviceError.InvalidData, ex.Message);
-        }
-        catch (DbUpdateException ex) when (IsDuplicateKeyViolation(ex))
-        {
-            logger.LogWarning(ex, "Duplicate key violation creating device");
-            return Result<Device>.Failure(CreateDeviceError.DuplicateDevice, "Database duplicate key violation occurred.");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Unexpected error creating device");
-            return Result<Device>.Failure(CreateDeviceError.UnexpectedError, ex.Message);
-        }
+        var device = await registration.Register(null, command.MacAddress.Value, command.FieldId.Value, "Sensor", command.Status.Value, command.LastSync, cancellationToken);
+        return Result<Device>.Success(device);
     }
 
     public async Task<Result<Device>> Handle(UpdateDeviceCommand command, CancellationToken cancellationToken = default)
@@ -62,7 +31,7 @@ public class DeviceCommandService(
             {
                 logger.LogWarning("Device with id {Id} not found for update", command.Id);
                 return Result<Device>.Failure(
-                    CreateDeviceError.InvalidData,
+                    CreateDeviceError.DeviceNotFound,
                     $"Device with id {command.Id} not found.");
             }
             
@@ -75,6 +44,8 @@ public class DeviceCommandService(
                     $"MAC address {command.MacAddress} is already in use.");
             }
             
+            if (device.MacAddress.Value.Replace('-', ':').ToUpperInvariant() != command.MacAddress.Value.Replace('-', ':').ToUpperInvariant())
+                return Result<Device>.Failure(CreateDeviceError.InvalidData, "Registered MAC cannot be changed.");
             device.Update(command);
             deviceRepository.Update(device);
             await unitOfWork.CompleteAsync(cancellationToken);

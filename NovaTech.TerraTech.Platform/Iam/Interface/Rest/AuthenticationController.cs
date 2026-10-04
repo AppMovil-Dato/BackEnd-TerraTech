@@ -1,72 +1,26 @@
-using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
-using NovaTech.TerraTech.Platform.Iam.Application.CommandServices;
-using NovaTech.TerraTech.Platform.Iam.Infrastructure.Pipeline.Middleware.Attributes;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.JsonWebTokens;
+using NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates;
+using NovaTech.TerraTech.Platform.Iam.Domain.Model.ValueObjects;
 using NovaTech.TerraTech.Platform.Iam.Interface.Rest.Resources;
-using NovaTech.TerraTech.Platform.Iam.Interface.Rest.Transform;
-using NovaTech.TerraTech.Platform.Iam.Resources;
-using NovaTech.TerraTech.Platform.Shared.Interfaces.Rest.ProblemDetails;
-using NovaTech.TerraTech.Platform.Shared.Resources.Errors;
-using Swashbuckle.AspNetCore.Annotations;
-
+using NovaTech.TerraTech.Platform.Iam.Application.Internal.OutboundServices;
+using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest;
-
-[Authorize]
-[ApiController]
-[Route("api/v1/[controller]")]
-[Produces(MediaTypeNames.Application.Json)]
-[SwaggerTag("Available Authentication endpoints")]
-public class AuthenticationController(
-    IUserCommandService userCommandService, IStringLocalizer<ErrorMessages> errorLocalizer,
-    IStringLocalizer<IamMessages> iamLocalizer, ProblemDetailsFactory problemDetailsFactory) 
-    : ControllerBase
+[ApiController, Route("api/v1/authentication"), AllowAnonymous]
+public class AuthenticationController(NovaTech.TerraTech.Platform.Iam.Application.Internal.CommandServices.AccountService accounts) : ControllerBase
 {
-    [HttpPost("sign-in")]
-    [AllowAnonymous]
-    [SwaggerOperation(
-        Summary = "Sign in",
-        Description = "Sign in a User",
-        OperationId = "SignIn")]
-    [SwaggerResponse(StatusCodes.Status200OK, "The user was authenticated", typeof(AuthenticatedUserResource))]
-    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid email or password")]
-    public async Task<IActionResult> SignIn([FromBody] SignInResource signInResource,
-        CancellationToken cancellationToken)
+    [HttpPost("sign-up"), ProducesResponseType<UserResource>(201)]
+    public async Task<IActionResult> SignUp(SignUpResource resource, CancellationToken ct)
     {
-        var signInCommand = SignInCommandFromResourceAssembler.ToCommandFromResource(signInResource);
-        var result = await userCommandService.Handle(signInCommand, cancellationToken);
-
-        return IamActionResultAssembler.ToActionResultFromSignInResult(
-            this,
-            result,
-            errorLocalizer,
-            problemDetailsFactory,
-            userAndToken =>
-                Ok(AuthenticatedUserResourceFromEntityAssembler.ToResourceFromEntity(userAndToken.user,
-                    userAndToken.token))
-        );
+        var user = await accounts.Register(resource.FullName, resource.EmailAddress, resource.Password, resource.ConfirmPassword, ct);
+        return Created($"/api/v1/users/{user.Id}", new UserResource(user.Id, user.EmailAddress.Value, user.FullName));
     }
-
-    [HttpPost("sign-up")]
-    [AllowAnonymous]
-    [SwaggerOperation(
-        Summary = "Sign up",
-        Description = "Sign up a new User",
-        OperationId = "SignUp")]
-    [SwaggerResponse(StatusCodes.Status200OK, "The user was authenticated")]
-    [SwaggerResponse(StatusCodes.Status400BadRequest, "The user was not created")]
-    public async Task<IActionResult> SignUp([FromBody] SignUpResource signUpResource,
-        CancellationToken cancellationToken)
+    [HttpPost("sign-in"), ProducesResponseType<AuthenticatedUserResource>(200)]
+    public async Task<IActionResult> SignIn(SignInResource resource, CancellationToken ct)
     {
-        var signUpCommand = SignUpCommandFromResourceAssembler.ToCommandFromResource(signUpResource);
-        var result = await userCommandService.Handle(signUpCommand, cancellationToken);
-
-        return IamActionResultAssembler.ToActionResultFromSignUpResult(
-            this,
-            result,
-            errorLocalizer,
-            problemDetailsFactory,
-            () => Ok(new { message = iamLocalizer["UserCreatedSuccessfully"] })
-        );
+        var (user, token) = await accounts.Login(resource.EmailAddress, resource.Password, ct);
+        return Ok(new AuthenticatedUserResource(user.Id, user.EmailAddress.Value, token, user.FullName, new JsonWebToken(token).ValidTo));
     }
 }

@@ -44,6 +44,7 @@ public class FieldsController(
             return ActionResultFromCreateFieldResultAssembler.ToActionResultFromCreateFieldResult(
                 result, this, localizer, nameof(GetFieldById));
         }
+        catch (ApiFailure) { throw; }
         catch (ArgumentException ex)
         {
             logger.LogWarning(ex, "Validation failed while creating Field for SoilType {SoilType}", resource.SoilType);
@@ -128,6 +129,7 @@ public class FieldsController(
             var resources = fields.Select(FieldResourceFromEntityAssembler.ToResourceFromEntity);
             return Ok(resources);
         }
+        catch (ApiFailure) { throw; }
         catch (ArgumentException ex)
         {
             logger.LogWarning(ex, "Invalid soil type value: {SoilType}", typeId);
@@ -178,6 +180,7 @@ public class FieldsController(
             var resourceResponse = FieldResourceFromEntityAssembler.ToResourceFromEntity(result.Value);
             return Ok(resourceResponse);
         }
+        catch (ApiFailure) { throw; }
         catch (ArgumentException ex)
         {
             logger.LogWarning(ex, "Validation failed while updating field {FieldId}", id);

@@ -51,6 +51,7 @@ public class NotificationsController(
             return Problem(title: "Unexpected server error", 
                 detail: "An unexpected error occurred while processing your request", statusCode: 500);
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating notification");
@@ -83,6 +84,7 @@ public class NotificationsController(
             
             return Problem(title: "Unexpected server error", statusCode: 500);
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error marking notification {Id} as read", notificationId);

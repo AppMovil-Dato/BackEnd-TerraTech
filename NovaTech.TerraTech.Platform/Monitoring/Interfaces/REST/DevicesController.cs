@@ -1,4 +1,4 @@
-﻿using System.Net.Mime;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NovaTech.TerraTech.Platform.Monitoring.Application.Services;
@@ -44,6 +44,7 @@ public class DevicesController(
             return ActionResultFromCreateDeviceResultAssembler.ToActionResultFromCreateDeviceResult(
                 result, this, localizer, nameof(GetDeviceById));
         }
+        catch (ApiFailure) { throw; }
         catch (ArgumentException ex)
         {
             logger.LogWarning(ex, "Validation failed while creating device with MAC {MacAddress}", resource.MacAddress);
@@ -159,6 +160,7 @@ public class DevicesController(
             var resources = devices.Select(DeviceResourceFromEntityAssembler.ToResourceFromEntity);
             return Ok(resources);
         }
+        catch (ApiFailure) { throw; }
         catch (ArgumentException ex)
         {
             logger.LogWarning(ex, "Invalid status value: {Status}", status);
@@ -198,7 +200,8 @@ public class DevicesController(
             {
                 return result.Error switch
                 {
-                    CreateDeviceError.InvalidData => NotFound(new { error = result.Message }),
+                    CreateDeviceError.DeviceNotFound => NotFound(),
+                    CreateDeviceError.InvalidData or CreateDeviceError.InvalidMacAddress => BadRequest(new { error = result.Message }),
                     CreateDeviceError.DuplicateDevice => Conflict(new { error = result.Message }),
                     _ => Problem(
                         title: localizer["UnexpectedServerError"].Value,
@@ -210,6 +213,7 @@ public class DevicesController(
             var resourceResponse = DeviceResourceFromEntityAssembler.ToResourceFromEntity(result.Value);
             return Ok(resourceResponse);
         }
+        catch (ApiFailure) { throw; }
         catch (ArgumentException ex)
         {
             logger.LogWarning(ex, "Validation failed while updating device {DeviceId}", id);

@@ -1,0 +1,17 @@
+{
+  "configuration": "Debug",
+  "sdk": "10.0.401",
+  "database": "MySQL 9.5.0, isolated localhost:33308, new UUID databases",
+  "testsPassed": 49,
+  "testsFailed": 0,
+  "testsSkipped": 0,
+  "linesCovered": 1445,
+  "linesValid": 1893,
+  "lineCoveragePercent": 76.33,
+  "branchesCovered": 141,
+  "branchesValid": 329,
+  "branchCoveragePercent": 42.85,
+  "generatedAndMigrationsExcluded": true,
+  "measuredAtUtc": "2026-10-04T03:51:05.005794+00:00",
+  "functionalPercentageClaimed": false
+}

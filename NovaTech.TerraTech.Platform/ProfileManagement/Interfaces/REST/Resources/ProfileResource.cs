@@ -9,5 +9,5 @@ public record ProfileResource(
     [SwaggerParameter(Description = "Name of the fundo/farm")] string FundoName,
     [SwaggerParameter(Description = "Contact phone number")] string ContactPhone,
     [SwaggerParameter(Description = "Moisture threshold")] double MoistureThreshold,
-    [SwaggerParameter(Description = "Temperature threshold")] double TempThreshold
+    [SwaggerParameter(Description = "Temperature threshold")] double TempThreshold, string? Location = null, double? SizeM2 = null
 );

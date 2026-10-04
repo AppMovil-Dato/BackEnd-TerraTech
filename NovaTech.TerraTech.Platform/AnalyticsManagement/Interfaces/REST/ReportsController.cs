@@ -1,4 +1,4 @@
-﻿using System.Net.Mime;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NovaTech.TerraTech.Platform.AnalyticsManagement.Application.Services;
@@ -40,6 +40,7 @@ public class ReportsController(
             return ActionResultFromCreateReportResultAssembler.ToActionResultFromCreateReportResult(
                 result, this, localizer, nameof(GetReportById));
         }
+        catch (ApiFailure) { throw; }
         catch (ArgumentException ex)
         {
             logger.LogWarning(ex, "Validation failed while creating report for DeviceId {DeviceId}", resource.DeviceId);
@@ -96,6 +97,7 @@ public class ReportsController(
             var resourceResponse = ReportResourceFromEntityAssembler.ToResourceFromEntity(result.Value);
             return Ok(resourceResponse);
         }
+        catch (ApiFailure) { throw; }
         catch (ArgumentException ex)
         {
             logger.LogWarning(ex, "Validation failed while updating report with id {ReportId}", id);

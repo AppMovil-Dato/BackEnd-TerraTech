@@ -23,5 +23,6 @@ public record FieldResource(
     [SwaggerParameter(Description = "Size in square meters")] double SizeM2,
     [SwaggerParameter(Description = "Soil type")] string SoilType,
     [SwaggerParameter(Description = "Latitude")] double Latitude,
-    [SwaggerParameter(Description = "Longitude")] double Longitude
+    [SwaggerParameter(Description = "Longitude")] double Longitude,
+    string? CropName = null
 );

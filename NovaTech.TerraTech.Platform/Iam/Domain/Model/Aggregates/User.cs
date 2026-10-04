@@ -15,6 +15,8 @@ public partial class User(Email emailAddress, string passwordHash)
     {
     }
     
+    public string? FullName { get; private set; }
+    public void SetFullName(string name) => FullName = name.Trim();
     public int Id { get; }
     public Email EmailAddress { get; private set; } = emailAddress;
     

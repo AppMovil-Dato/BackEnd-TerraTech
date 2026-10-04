@@ -1,69 +1,21 @@
-using System.Net.Mime;
-// using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
-using NovaTech.TerraTech.Platform.Iam.Application.QueryServices;
-using NovaTech.TerraTech.Platform.Iam.Domain.Model.Queries;
+using Microsoft.EntityFrameworkCore;
+using NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates;
 using NovaTech.TerraTech.Platform.Iam.Interface.Rest.Resources;
-using NovaTech.TerraTech.Platform.Iam.Interface.Rest.Transform;
-using NovaTech.TerraTech.Platform.Shared.Interfaces.Rest.ProblemDetails;
-using NovaTech.TerraTech.Platform.Shared.Resources.Errors;
-using Swashbuckle.AspNetCore.Annotations;
-using NovaTech.TerraTech.Platform.Iam.Infrastructure.Pipeline.Middleware.Attributes;
-
+using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest;
-
-[Authorize]
-[ApiController]
-[Route("api/v1/[controller]")]
-[Produces(MediaTypeNames.Application.Json)]
-[SwaggerTag("Available Users endpoints")]
-public class UsersController(
-    IUserQueryService userQueryService, IStringLocalizer<ErrorMessages> errorLocalizer,
-    ProblemDetailsFactory problemDetailsFactory): ControllerBase
+[ApiController, Route("api/v1/users")]
+public class UsersController(NovaTech.TerraTech.Platform.Iam.Application.Internal.CommandServices.AccountService accounts) : ControllerBase
 {
-    private readonly IStringLocalizer<ErrorMessages> _errorLocalizer = errorLocalizer;
-    private readonly ProblemDetailsFactory _problemDetailsFactory = problemDetailsFactory;
-
+    [HttpGet("me")]
+    public async Task<ActionResult<UserResource>> Me(CancellationToken ct) => await GetUser(User.UserId(), null, ct);
     [HttpGet("{id:int}")]
-    [SwaggerOperation(
-        Summary = "Get a user by its id",
-        Description = "Get a user by its id",
-        OperationId = "GetUserById")]
-    [SwaggerResponse(StatusCodes.Status200OK, "The user was found", typeof(UserResource))]
-    [SwaggerResponse(StatusCodes.Status404NotFound, "The user was not found")]
-    public async Task<IActionResult> GetUserById(int id, CancellationToken cancellationToken)
-    {
-        var getUserByIdQuery = new GetUserByIdQuery(id);
-        var user = await userQueryService.Handle(getUserByIdQuery, cancellationToken);
-        
-        return IamActionResultAssembler.ToActionResultFromGetUserByIdResult(
-            this,
-            user,
-            _errorLocalizer,
-            _problemDetailsFactory,
-            foundUser => Ok(UserResourceFromEntityAssembler.ToResourceFromEntity(foundUser))
-        );
-    }
-
+    public async Task<ActionResult<UserResource>> ById(int id, CancellationToken ct) => await GetUser(id, null, ct);
     [HttpGet("email/{emailAddress}")]
-    [SwaggerOperation(
-        Summary = "Get a user by email",
-        Description = "Get a user by email",
-        OperationId = "GetUserByEmail")]
-    [SwaggerResponse(StatusCodes.Status200OK, "The user was found", typeof(UserResource))]
-    [SwaggerResponse(StatusCodes.Status404NotFound, "The user was not found")]
-    public async Task<IActionResult> GetUserByEmail(string emailAddress, CancellationToken cancellationToken)
+    public async Task<ActionResult<UserResource>> ByEmail(string emailAddress, CancellationToken ct) => await GetUser(User.UserId(), emailAddress, ct);
+    private async Task<ActionResult<UserResource>> GetUser(int id, string? email, CancellationToken ct)
     {
-        var getUserByEmailQuery = new GetUserByEmailQuery(emailAddress);
-        var user = await userQueryService.Handle(getUserByEmailQuery, cancellationToken);
-        
-        return IamActionResultAssembler.ToActionResultFromGetUserByEmailResult(
-            this,
-            user,
-            _errorLocalizer,
-            _problemDetailsFactory,
-            foundUser => Ok(UserResourceFromEntityAssembler.ToResourceFromEntity(foundUser))
-        );
+        var user = await accounts.GetOwn(User.UserId(), id, email, ct);
+        return new UserResource(user.Id, user.EmailAddress.Value, user.FullName);
     }
 }

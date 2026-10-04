@@ -92,6 +92,9 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasKey("Id")
                         .HasName("p_k_orders");
 
+                    b.HasIndex("ProfileId")
+                        .HasDatabaseName("i_x_orders_profile_id");
+
                     b.ToTable("orders");
                 });
 
@@ -179,6 +182,12 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasKey("Id")
                         .HasName("p_k_comments");
 
+                    b.HasIndex("AuthorProfileId")
+                        .HasDatabaseName("i_x_comments_author_profile_id");
+
+                    b.HasIndex("TargetProfileId")
+                        .HasDatabaseName("i_x_comments_target_profile_id");
+
                     b.ToTable("comments", (string)null);
                 });
 
@@ -208,6 +217,9 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasKey("Id")
                         .HasName("p_k_community_profiles");
 
+                    b.HasIndex("ProfileId")
+                        .HasDatabaseName("i_x_community_profiles_profile_id");
+
                     b.ToTable("community_profiles", (string)null);
                 });
 
@@ -221,6 +233,11 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.Property<DateTimeOffset?>("CreatedAt")
                         .HasColumnType("datetime")
                         .HasColumnName("created_at");
+
+                    b.Property<string>("FullName")
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("full_name");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -248,12 +265,26 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("SensorCode")
+                        .HasMaxLength(9)
+                        .HasColumnType("varchar(9)")
+                        .HasColumnName("sensor_code");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetime")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
                         .HasName("p_k_devices");
+
+                    b.HasIndex("SensorCode")
+                        .IsUnique()
+                        .HasDatabaseName("i_x_devices_sensor_code");
 
                     b.ToTable("devices");
                 });
@@ -269,6 +300,11 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("CropName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("crop_name");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetime")
                         .HasColumnName("updated_at");
@@ -277,6 +313,84 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasName("p_k_fields");
 
                     b.ToTable("fields");
+                });
+
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.SensorCatalogItem", b =>
+                {
+                    b.Property<string>("SensorCode")
+                        .HasMaxLength(9)
+                        .HasColumnType("varchar(9)")
+                        .HasColumnName("sensor_code");
+
+                    b.Property<bool>("IsDemo")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_demo");
+
+                    b.Property<string>("MacAddress")
+                        .IsRequired()
+                        .HasMaxLength(17)
+                        .HasColumnType("varchar(17)")
+                        .HasColumnName("mac_address");
+
+                    b.HasKey("SensorCode")
+                        .HasName("p_k_sensor_catalog_items");
+
+                    b.HasIndex("MacAddress")
+                        .IsUnique()
+                        .HasDatabaseName("i_x_sensor_catalog_items_mac_address");
+
+                    b.ToTable("sensor_catalog_items");
+                });
+
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.SensorReading", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    b.Property<int>("DeviceId")
+                        .HasColumnType("int")
+                        .HasColumnName("device_id");
+
+                    b.Property<double>("MoisturePercent")
+                        .HasColumnType("double")
+                        .HasColumnName("moisture_percent");
+
+                    b.Property<double>("NitrogenPpm")
+                        .HasColumnType("double")
+                        .HasColumnName("nitrogen_ppm");
+
+                    b.Property<double>("PhosphorusPpm")
+                        .HasColumnType("double")
+                        .HasColumnName("phosphorus_ppm");
+
+                    b.Property<double>("PotassiumPpm")
+                        .HasColumnType("double")
+                        .HasColumnName("potassium_ppm");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<double>("SoilTemperatureC")
+                        .HasColumnType("double")
+                        .HasColumnName("soil_temperature_c");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("source");
+
+                    b.HasKey("Id")
+                        .HasName("p_k_sensor_readings");
+
+                    b.HasIndex("DeviceId", "RecordedAt")
+                        .IsUnique()
+                        .HasDatabaseName("i_x_sensor_readings_device_id_recorded_at");
+
+                    b.ToTable("sensor_readings");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Aggregates.Notification", b =>
@@ -321,6 +435,9 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasKey("Id")
                         .HasName("p_k_notifications");
 
+                    b.HasIndex("ProfileId")
+                        .HasDatabaseName("i_x_notifications_profile_id");
+
                     b.ToTable("notifications");
                 });
 
@@ -335,6 +452,15 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("Location")
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("location");
+
+                    b.Property<double?>("SizeM2")
+                        .HasColumnType("double")
+                        .HasColumnName("size_m2");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetime")
                         .HasColumnName("updated_at");
@@ -345,6 +471,10 @@ namespace NovaTech.TerraTech.Platform.Migrations
 
                     b.HasKey("Id")
                         .HasName("p_k_profiles");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("i_x_profiles_user_id");
 
                     b.ToTable("profiles");
                 });
@@ -359,6 +489,10 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.Property<DateTimeOffset?>("CreatedAt")
                         .HasColumnType("datetime")
                         .HasColumnName("created_at");
+
+                    b.Property<int?>("OwnerUserId")
+                        .HasColumnType("int")
+                        .HasColumnName("owner_user_id");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int")
@@ -381,6 +515,9 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasKey("Id")
                         .HasName("p_k_inventories");
 
+                    b.HasIndex("OwnerUserId")
+                        .HasDatabaseName("i_x_inventories_owner_user_id");
+
                     b.ToTable("inventories");
                 });
 
@@ -399,11 +536,21 @@ namespace NovaTech.TerraTech.Platform.Migrations
                             b1.HasKey("Id")
                                 .HasName("p_k_reports");
 
+                            b1.HasIndex("Value")
+                                .HasDatabaseName("i_x_reports_device_id");
+
                             b1.ToTable("reports");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
                                 .HasConstraintName("f_k_reports_reports_id");
+
+                            b1.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Device", null)
+                                .WithMany()
+                                .HasForeignKey("Value")
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .IsRequired()
+                                .HasConstraintName("f_k_reports__device_device_id");
                         });
 
                     b.OwnsOne("NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.ValueObjects.GeneratedAt", "GeneratedAt", b1 =>
@@ -527,8 +674,42 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates.Order", b =>
+                {
+                    b.HasOne("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Aggregates.Profile", null)
+                        .WithMany()
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("f_k_orders__profile_profile_id");
+                });
+
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.Aggregates.Comment", b =>
+                {
+                    b.HasOne("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Aggregates.Profile", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("f_k_comments__profile_author_profile_id");
+
+                    b.HasOne("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Aggregates.Profile", null)
+                        .WithMany()
+                        .HasForeignKey("TargetProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("f_k_comments__profile_target_profile_id");
+                });
+
             modelBuilder.Entity("NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.Aggregates.CommunityProfile", b =>
                 {
+                    b.HasOne("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Aggregates.Profile", null)
+                        .WithMany()
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("f_k_community_profiles__profile_profile_id");
+
                     b.OwnsOne("NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.ValueObjects.CommunityNickname", "Nickname", b1 =>
                         {
                             b1.Property<int>("CommunityProfileId")
@@ -637,6 +818,12 @@ namespace NovaTech.TerraTech.Platform.Migrations
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Device", b =>
                 {
+                    b.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.SensorCatalogItem", null)
+                        .WithMany()
+                        .HasForeignKey("SensorCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("f_k_devices__sensor_catalog_item_sensor_code");
+
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.DeviceStatus", "Status", b1 =>
                         {
                             b1.Property<int>("Id")
@@ -672,11 +859,21 @@ namespace NovaTech.TerraTech.Platform.Migrations
                             b1.HasKey("Id")
                                 .HasName("p_k_devices");
 
+                            b1.HasIndex("Value")
+                                .HasDatabaseName("i_x_devices_field_id");
+
                             b1.ToTable("devices");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
                                 .HasConstraintName("f_k_devices_devices_id");
+
+                            b1.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Field", null)
+                                .WithMany()
+                                .HasForeignKey("Value")
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .IsRequired()
+                                .HasConstraintName("f_k_devices_fields_field_id");
                         });
 
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.LastSync", "LastSync", b1 =>
@@ -713,6 +910,10 @@ namespace NovaTech.TerraTech.Platform.Migrations
 
                             b1.HasKey("Id")
                                 .HasName("p_k_devices");
+
+                            b1.HasIndex("Value")
+                                .IsUnique()
+                                .HasDatabaseName("i_x_devices_mac_address");
 
                             b1.ToTable("devices");
 
@@ -795,11 +996,21 @@ namespace NovaTech.TerraTech.Platform.Migrations
                             b1.HasKey("Id")
                                 .HasName("p_k_fields");
 
+                            b1.HasIndex("Value")
+                                .HasDatabaseName("i_x_fields_profile_id");
+
                             b1.ToTable("fields");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
                                 .HasConstraintName("f_k_fields_fields_id");
+
+                            b1.HasOne("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Aggregates.Profile", null)
+                                .WithMany()
+                                .HasForeignKey("Value")
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .IsRequired()
+                                .HasConstraintName("f_k_fields__profile_profile_id");
                         });
 
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.SizeM2", "SizeM2", b1 =>
@@ -860,8 +1071,35 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.SensorReading", b =>
+                {
+                    b.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Device", null)
+                        .WithMany()
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("f_k_sensor_readings_devices_device_id");
+                });
+
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Aggregates.Notification", b =>
+                {
+                    b.HasOne("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Aggregates.Profile", null)
+                        .WithMany()
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("f_k_notifications__profile_profile_id");
+                });
+
             modelBuilder.Entity("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Aggregates.Profile", b =>
                 {
+                    b.HasOne("NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("f_k_profiles_users_user_id");
+
                     b.OwnsOne("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.ValueObjects.ContactPhone", "Phone", b1 =>
                         {
                             b1.Property<int>("Id")
@@ -936,6 +1174,15 @@ namespace NovaTech.TerraTech.Platform.Migrations
 
                     b.Navigation("Thresholds")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Aggregates.Inventory", b =>
+                {
+                    b.HasOne("NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("f_k_inventories_users_owner_user_id");
                 });
 #pragma warning restore 612, 618
         }

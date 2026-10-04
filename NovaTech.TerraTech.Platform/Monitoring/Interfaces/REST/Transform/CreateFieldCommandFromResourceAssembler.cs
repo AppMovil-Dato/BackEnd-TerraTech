@@ -13,7 +13,7 @@ public class CreateFieldCommandFromResourceAssembler
             new FieldName(resource.Name),
             new SizeM2(resource.SizeM2),
             new SoilType(resource.SoilType),
-            new LocationLatLong(resource.Latitude, resource.Longitude)
+            new LocationLatLong(resource.Latitude, resource.Longitude), resource.CropName
         );
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NovaTech.TerraTech.Platform.CommunityManagement.Application.Errors;
 using NovaTech.TerraTech.Platform.CommunityManagement.Application.Services;
@@ -41,6 +42,7 @@ public class CommunityProfilesController(
                 _ => Problem(title: "Unexpected server error", detail: "An unexpected error occurred", statusCode: 500)
             };
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating community profile");
@@ -48,6 +50,7 @@ public class CommunityProfilesController(
         }
     }
 
+    [AllowAnonymous]
     [HttpGet]
     [SwaggerOperation(Summary = "Gets all community profiles")]
     [SwaggerResponse(200, "Profiles retrieved", typeof(IEnumerable<CommunityProfileResource>))]
@@ -59,6 +62,7 @@ public class CommunityProfilesController(
         return Ok(resources);
     }
 
+    [AllowAnonymous]
     [HttpGet("{profileId}")]
     [SwaggerOperation(Summary = "Gets a profile by its Profile ID")]
     [SwaggerResponse(200, "Profile found", typeof(CommunityProfileResource))]
@@ -102,6 +106,7 @@ public class CommunityProfilesController(
             return (CommunityError)result.Error == CommunityError.NotFound ? NotFound("Profile not found") : 
                 Problem(title: "Unexpected server error", statusCode: 500);
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error updating profile {Id}", id);

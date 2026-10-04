@@ -31,17 +31,17 @@ public class TokenService(IOptions<TokenSettings> tokenSettings) : ITokenService
     public string GenerateToken(User user)
     {
         var secret = _tokenSettings.Secret;
-        var key = Encoding.ASCII.GetBytes(secret);
+        var key = Encoding.UTF8.GetBytes(secret);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.Sid, user.Id.ToString()),
+                new Claim("sub", user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.EmailAddress.Value)
             }),
-            Expires = DateTime.UtcNow.AddDays(7),
+            Expires = DateTime.UtcNow.AddHours(8),
             SigningCredentials =
-                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
         };
         var tokenHandler = new JsonWebTokenHandler();
         var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -65,7 +65,7 @@ public class TokenService(IOptions<TokenSettings> tokenSettings) : ITokenService
             return null;
         }
         var tokenHandler = new JsonWebTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_tokenSettings.Secret);
+        var key = Encoding.UTF8.GetBytes(_tokenSettings.Secret);
 
         try
         {
@@ -77,13 +77,13 @@ public class TokenService(IOptions<TokenSettings> tokenSettings) : ITokenService
                 ValidateAudience = false,
                 ClockSkew = TimeSpan.Zero
             });
+            if (!tokenValidationResult.IsValid) return null;
             var jwtToken = (JsonWebToken)tokenValidationResult.SecurityToken;
-            var userId = int.Parse(jwtToken.Claims.First(claim => claim.Type == ClaimTypes.Sid).Value);
+            var userId = int.Parse(jwtToken.Claims.First(claim => claim.Type == "sub" || claim.Type == "sid" || claim.Type == ClaimTypes.Sid).Value);
             return userId;
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Console.WriteLine(e);
             return null;
         }
     }

@@ -1,4 +1,4 @@
-﻿using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects;
+using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects;
 
 namespace NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Commands;
 
@@ -7,5 +7,5 @@ public record UpdateFieldCommand(
     FieldName Name,
     SizeM2 SizeM2,
     SoilType SoilType,
-    LocationLatLong LocationLatLong
+    LocationLatLong LocationLatLong, string? CropName = null
 );

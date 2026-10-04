@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NovaTech.TerraTech.Platform.CommercialManagement.Application.Services;
 using NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Queries;
@@ -35,6 +36,7 @@ public class ProductsController(
             
             return BadRequest("Invalid product request");
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating product");
@@ -43,6 +45,7 @@ public class ProductsController(
         }
     }
 
+    [AllowAnonymous]
     [HttpGet]
     [SwaggerOperation(Summary = "Gets all products")]
     [SwaggerResponse(200, "Products retrieved", typeof(IEnumerable<ProductResource>))]
@@ -54,6 +57,7 @@ public class ProductsController(
         return Ok(resources);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Gets a product by id")]
     [SwaggerResponse(200, "Product found", typeof(ProductResource))]

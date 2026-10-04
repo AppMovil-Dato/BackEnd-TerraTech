@@ -15,6 +15,8 @@ public partial class Inventory
         WarehouseLocation = command.WarehouseLocation ?? string.Empty;
     }
 
+    public int? OwnerUserId { get; private set; }
+    public void AssignOwner(int userId) => OwnerUserId = userId;
     public int Id { get; private set; }
     public int ProductId { get; private set; }
     public int StockQuantity { get; private set; }

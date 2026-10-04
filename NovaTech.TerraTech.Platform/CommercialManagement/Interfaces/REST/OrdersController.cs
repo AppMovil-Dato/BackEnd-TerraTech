@@ -45,6 +45,7 @@ public class OrdersController(
                     detail: "An unexpected error occurred while processing your request", statusCode: 500)
             };
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating order");
@@ -73,6 +74,7 @@ public class OrdersController(
             return (CommercialError)result.Error == CommercialError.NotFound ? NotFound() : 
                 Problem(title: "Unexpected server error", statusCode: 500);
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error validating order {Id}", id);
@@ -100,6 +102,7 @@ public class OrdersController(
             return (CommercialError)result.Error == CommercialError.NotFound ? NotFound() : 
                 Problem(title: "Unexpected server error", statusCode: 500);
         }
+        catch (ApiFailure) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error updating order status {Id}", id);

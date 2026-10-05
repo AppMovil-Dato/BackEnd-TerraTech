@@ -185,6 +185,7 @@ public partial class JourneyTests(TestServer server) : IClassFixture<TestServer>
         var device=await db.Set<Device>().IgnoreQueryFilters().SingleAsync();Assert.Equal(123,device.Id);Assert.Equal(1,device.FieldId.Value);Assert.Equal("aa-bb-cc-dd-ee-ff",device.MacAddress.Value);Assert.Equal("TT-00003F",device.SensorCode);
         var sensor=await db.Set<SensorCatalogItem>().SingleAsync();Assert.Equal(device.MacAddress.Value,sensor.MacAddress);Assert.False(sensor.IsDemo);
         await db.Database.MigrateAsync();Assert.Single(await db.Set<Device>().IgnoreQueryFilters().ToListAsync());
+        var legacyField = await db.Set<Field>().IgnoreQueryFilters().SingleAsync(); Assert.Null(legacyField.Boundary); Assert.Equal(100, legacyField.SizeM2.Value);
     }
     [Fact] public async Task PreflightRejectsOrphansAndDuplicatesWithoutDeletingData()
     {

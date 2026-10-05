@@ -27,5 +27,6 @@ public record CreateFieldResource(
     [Required]
     [Range(-180, 180)]
     [SwaggerParameter(Description = "Longitude coordinate (-180 to 180)")] double Longitude,
-    [MaxLength(100)] string? CropName = null
+    [MaxLength(100)] string? CropName = null,
+    IReadOnlyList<FieldVertexResource>? Boundary = null
 );

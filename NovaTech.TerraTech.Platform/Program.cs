@@ -75,7 +75,7 @@ builder.Services.AddHealthChecks().AddCheck<DatabaseReadinessCheck>("database", 
 // Add services to the container.
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
-builder.Services.AddControllers(options => { options.Conventions.Add(new KebabCaseRouteNamingConvention()); options.Filters.Add<OwnershipFilter>(); })
+builder.Services.AddControllers(options => { options.Conventions.Add(new KebabCaseRouteNamingConvention()); options.Filters.Add<OwnershipFilter>(); options.Filters.Add<ProblemDetailsMediaTypeFilter>(int.MaxValue); })
     .AddDataAnnotationsLocalization();
 
 // Add ProblemDetails services

@@ -4,7 +4,7 @@ Base: `/api/v1`. JSON camelCase en los contratos nuevos. JWT en `Authorization: 
 
 | Paso | Endpoint | Resultado |
 |---|---|---|
-| Registro | `POST /authentication/sign-up` | 201 `{id,emailAddress,fullName}` |
+| Registro | `POST /authentication/sign-up` | 201 `{id,emailAddress,fullName,token,expiresAt}` |
 | Login | `POST /authentication/sign-in` | 200 `{id,emailAddress,token,fullName,expiresAt}` |
 | Cuenta | `GET /users/me` | Datos públicos de la cuenta propia |
 | Perfil | `GET /profiles/me` | 200 perfil propio; 404 si aún no se completó |
@@ -63,3 +63,7 @@ Un JWT expirado no invalida los datos ya cacheados para lectura local, pero Andr
 Problem Details: `type`, `title`, `status`, `traceId` cuando corresponda y `code` para casos distinguibles. Validación automática puede añadir `errors`. Resolver 401 como sesión inválida; 404 `PROFILE_NOT_FOUND` como perfil pendiente; 404 `NO_READINGS` como sensor sin datos; 409 como conflicto. Los recursos ajenos devuelven 404 para no revelar su existencia.
 
 Sin verificación de correo ni recuperación de contraseña en TB1. Snapshot: `backend-openapi.snapshot.json`, exportado del backend compilado Debug. No confundir cobertura de líneas con el porcentaje funcional de la rúbrica.
+
+## Actualización de sesión y mapas
+
+El registro emite directamente un JWT de ocho horas. `boundary` es opcional en las parcelas y contiene vértices `{latitude,longitude}`. El servidor calcula área y ubicación cuando se envía un contorno válido. Omitirlo en PUT lo preserva; `[]` lo elimina. Ver [UX_SESSION_MAP.md](UX_SESSION_MAP.md).

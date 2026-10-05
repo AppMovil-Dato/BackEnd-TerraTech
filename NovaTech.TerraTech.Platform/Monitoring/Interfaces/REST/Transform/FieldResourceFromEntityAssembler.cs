@@ -32,7 +32,8 @@ public static class FieldResourceFromEntityAssembler
             soilType,
             latitude,
             longitude,
-            entity.CropName
+            entity.CropName,
+            entity.Boundary?.Select(p => new FieldVertexResource(p.Latitude, p.Longitude)).ToArray()
         );
     }
 }

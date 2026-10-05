@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8080
-@token = REEMPLAZAR_CON_TOKEN_DEL_LOGIN
+@token = REEMPLAZAR_CON_TOKEN_DE_REGISTRO_O_LOGIN
 @profileId = 1
 @fieldId = 1
 @deviceId = 1
@@ -76,3 +76,24 @@ Content-Type: application/json
 ### Detalle: copiar un id de lectura del histórico en readingId
 GET {{baseUrl}}/api/v1/devices/{{deviceId}}/readings/{{readingId}}
 Authorization: Bearer {{token}}
+
+### Parcela con contorno (token obtenido de registro o login)
+POST {{baseUrl}}/api/v1/fields
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "profileId": {{profileId}},
+  "name": "Parcela con mapa",
+  "cropName": "Papa",
+  "soilType": "Franco",
+  "sizeM2": 12000,
+  "latitude": -14.0005,
+  "longitude": -74.9995,
+  "boundary": [
+    {"latitude": -14.0, "longitude": -75.0},
+    {"latitude": -14.0, "longitude": -74.999},
+    {"latitude": -14.001, "longitude": -74.999},
+    {"latitude": -14.001, "longitude": -75.0}
+  ]
+}

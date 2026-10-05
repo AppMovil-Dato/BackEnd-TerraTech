@@ -1,0 +1,14 @@
+{
+  "configuration": "Debug",
+  "database": "isolated local MySQL",
+  "tests": 69,
+  "passed": 69,
+  "failed": 0,
+  "lineRate": 0.7944,
+  "branchRate": 0.5362,
+  "coverageExcludes": [
+    "migrations",
+    "generated code"
+  ],
+  "functionalCoverageIsNotLineCoverage": true
+}

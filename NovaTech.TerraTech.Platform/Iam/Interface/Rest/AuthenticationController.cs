@@ -9,13 +9,14 @@ using NovaTech.TerraTech.Platform.Iam.Application.Internal.OutboundServices;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest;
 [ApiController, Route("api/v1/authentication"), AllowAnonymous]
-public class AuthenticationController(NovaTech.TerraTech.Platform.Iam.Application.Internal.CommandServices.AccountService accounts) : ControllerBase
+public class AuthenticationController(NovaTech.TerraTech.Platform.Iam.Application.Internal.CommandServices.AccountService accounts, ITokenService tokens) : ControllerBase
 {
-    [HttpPost("sign-up"), ProducesResponseType<UserResource>(201)]
+    [HttpPost("sign-up"), ProducesResponseType<AuthenticatedUserResource>(201)]
     public async Task<IActionResult> SignUp(SignUpResource resource, CancellationToken ct)
     {
         var user = await accounts.Register(resource.FullName, resource.EmailAddress, resource.Password, resource.ConfirmPassword, ct);
-        return Created($"/api/v1/users/{user.Id}", new UserResource(user.Id, user.EmailAddress.Value, user.FullName));
+        var token = tokens.GenerateToken(user);
+        return Created($"/api/v1/users/{user.Id}", new AuthenticatedUserResource(user.Id, user.EmailAddress.Value, token, user.FullName, new JsonWebToken(token).ValidTo));
     }
     [HttpPost("sign-in"), ProducesResponseType<AuthenticatedUserResource>(200)]
     public async Task<IActionResult> SignIn(SignInResource resource, CancellationToken ct)

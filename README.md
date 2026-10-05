@@ -2,7 +2,7 @@
 
 .NET 10, ASP.NET Core, EF Core y MySQL. Se mantienen los contextos DDD, agregados, repositorios, servicios de aplicación y las rutas anteriores. Los nuevos servicios de cuenta, perfil propio y sensores usan los puertos de persistencia; la seguridad y las migraciones se centralizan en infraestructura compartida.
 
-El recorrido de esta entrega es **registro → login → perfil → parcela → asociación de sensor → última lectura → histórico de 7/30 días**. Los datos de demostración llevan `source: "SIMULATED"`. Android compondrá sus pantallas y guardará estos resultados en Room; el servidor no requiere un dashboard agregado ni endpoints offline.
+El recorrido de esta entrega es **registro con sesión inmediata → perfil → parcela → asociación de sensor → última lectura → histórico de 7/30 días**. Los datos de demostración llevan `source: "SIMULATED"`. Android compondrá sus pantallas y guardará estos resultados en Room; el servidor no requiere un dashboard agregado ni endpoints offline.
 
 ## Ejecutar en desarrollo
 
@@ -30,7 +30,7 @@ dotnet run --project NovaTech.TerraTech.Platform -c Debug --no-build --no-launch
 
 Provisiona cinco sensores: `TT-ZZZ001` a `TT-ZZZ005`, MAC `02:54:54:00:00:01` a `02:54:54:00:00:05`. Es repetible: conserva el catálogo existente y detecta colisiones. No crea usuarios ni contraseñas.
 
-1. Registrar una cuenta enviando `fullName`, `emailAddress`, `password` y `confirmPassword` idéntico; hacer login.
+1. Registrar una cuenta enviando `fullName`, `emailAddress`, `password` y `confirmPassword` idéntico; usar el token devuelto por el registro.
 2. Completar `PUT /api/v1/profiles/me`.
 3. Crear una parcela propia mediante `POST /api/v1/fields`.
 4. Asociar `TT-ZZZ001` mediante `POST /api/v1/devices/register` y anotar el ID devuelto.
@@ -85,3 +85,7 @@ Cada tipo tiene su propio archivo. Los recursos de perfil y lecturas están en `
 La API está preparada para Cloud Run con `PORT`, HTTPS terminado por el proxy, probes públicos y migraciones automáticas optativas mediante `Database__MigrateOnStartup=true` (también admite Job separado). [Instrucciones](docs/CLOUD_RUN.md). `cloudbuild.yaml` construye/publica la imagen; el despliegue sigue siendo explícito. GitHub Actions ejecuta la suite Debug contra MySQL 8.4 aislado y construye AMD64 en cada cambio a main. La validación local pasó **59 pruebas**, más **15 pasos HTTP** dentro del contenedor Production; [evidencia](docs/cloud-run-validation.json). No se ha desplegado en GCP.
 
 Inicialización automática en Cloud Run: **61 pruebas Debug aprobadas**, más creación de una base inexistente y esquema desde el contenedor Production AMD64 con `Database__MigrateOnStartup=true`; [evidencia](docs/startup-migration-validation.json). La conexión debe contener un nombre de base y permisos DDL. Los datos de demostración siguen siendo explícitos.
+
+Cambios de experiencia Android: [sesión inmediata y contornos persistidos](docs/UX_SESSION_MAP.md).
+
+Validación del refactor de sesión/mapas: **69 pruebas Debug aprobadas**, incluidas las pruebas anteriores de arranque y migración; [resultado](docs/ux-validation.json).

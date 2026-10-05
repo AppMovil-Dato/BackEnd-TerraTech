@@ -24,5 +24,6 @@ public record FieldResource(
     [SwaggerParameter(Description = "Soil type")] string SoilType,
     [SwaggerParameter(Description = "Latitude")] double Latitude,
     [SwaggerParameter(Description = "Longitude")] double Longitude,
-    string? CropName = null
+    string? CropName = null,
+    IReadOnlyList<FieldVertexResource>? Boundary = null
 );

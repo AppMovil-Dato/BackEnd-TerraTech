@@ -24,6 +24,7 @@ public partial class Field
         SoilType = command.SoilType;
         LocationLatLong = command.LocationLatLong;
         CropName = command.CropName;
+        SetBoundary(command.Boundary);
     }
     
     public string? CropName { get; private set; }
@@ -42,5 +43,15 @@ public partial class Field
         SoilType = command.SoilType;
         LocationLatLong = command.LocationLatLong;
         CropName = command.CropName;
+        SetBoundary(command.Boundary ?? Boundary);
+    }
+    public IReadOnlyList<FieldVertex>? Boundary { get; private set; }
+
+    private void SetBoundary(IReadOnlyList<FieldVertex>? vertices)
+    {
+        Boundary = FieldBoundary.Validate(vertices);
+        if (Boundary is null) return;
+        SizeM2 = new SizeM2(FieldBoundary.AreaM2(Boundary));
+        LocationLatLong = new LocationLatLong(Boundary.Average(p => p.Latitude), Boundary.Average(p => p.Longitude));
     }
 }

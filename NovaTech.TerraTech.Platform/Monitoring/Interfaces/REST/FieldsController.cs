@@ -14,7 +14,6 @@ namespace NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-[Produces(MediaTypeNames.Application.Json)]
 [Tags("Monitoring")]
 public class FieldsController(
     IFieldCommandService fieldCommandService,

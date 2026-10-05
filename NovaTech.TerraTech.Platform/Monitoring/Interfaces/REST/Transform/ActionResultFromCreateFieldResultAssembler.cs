@@ -23,6 +23,9 @@ public class ActionResultFromCreateFieldResultAssembler
             var failure when failure.IsFailure =>
                 failure.Error switch
                 {
+                    CreateFieldError.InvalidData =>
+                        NovaTech.TerraTech.Platform.Shared.Tb1.ApiFailure.Result(400, "INVALID_INPUT", "Field data or boundary is invalid."),
+
                     CreateFieldError.DuplicateField =>
                         controller.Conflict(localizer["NewsFieldDuplicated"].Value),
 

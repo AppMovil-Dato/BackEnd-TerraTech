@@ -10,6 +10,7 @@ public static class ModelBuilderExtensions
         builder.Entity<Field>(field =>
         {
             field.HasKey(f => f.Id);
+            field.Property(f => f.Boundary).HasConversion(new NovaTech.TerraTech.Platform.Monitoring.Infrastructure.Persistence.EntityFrameworkCore.Configuration.FieldBoundaryConverter()).HasColumnType("longtext").Metadata.SetValueComparer(new NovaTech.TerraTech.Platform.Monitoring.Infrastructure.Persistence.EntityFrameworkCore.Configuration.FieldBoundaryComparer());
             field.Property(f => f.Id)
                 .IsRequired()
                 .ValueGeneratedOnAdd();

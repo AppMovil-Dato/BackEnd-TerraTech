@@ -7,5 +7,5 @@ public record UpdateFieldCommand(
     FieldName Name,
     SizeM2 SizeM2,
     SoilType SoilType,
-    LocationLatLong LocationLatLong, string? CropName = null
+    LocationLatLong LocationLatLong, string? CropName = null, IReadOnlyList<FieldVertex>? Boundary = null
 );

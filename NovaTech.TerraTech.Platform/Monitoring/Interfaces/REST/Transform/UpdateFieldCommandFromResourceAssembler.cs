@@ -13,7 +13,7 @@ public static class UpdateFieldCommandFromResourceAssembler
             new FieldName(resource.Name),
             new SizeM2(resource.SizeM2),
             new SoilType(resource.SoilType),
-            new LocationLatLong(resource.Latitude, resource.Longitude), resource.CropName
+            new LocationLatLong(resource.Latitude, resource.Longitude), resource.CropName, resource.Boundary?.Select(p => new FieldVertex(p.Latitude, p.Longitude)).ToArray()
         );
     }
 }

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
 namespace NovaTech.TerraTech.Platform.Shared.Tb1;
-
 public class ApiExceptionHandler : Microsoft.AspNetCore.Diagnostics.IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken ct)

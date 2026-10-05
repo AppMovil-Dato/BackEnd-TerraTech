@@ -1,21 +1,22 @@
 using NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Commands;
 
 namespace NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Aggregates;
-
 public partial class Inventory
 {
-    protected Inventory() { }
+    protected Inventory()
+    {
+    }
 
     public Inventory(CreateInventoryCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);
-        
         ProductId = command.ProductId;
         StockQuantity = command.StockQuantity;
         WarehouseLocation = command.WarehouseLocation ?? string.Empty;
     }
 
     public int? OwnerUserId { get; private set; }
+
     public void AssignOwner(int userId) => OwnerUserId = userId;
     public int Id { get; private set; }
     public int ProductId { get; private set; }
@@ -26,7 +27,6 @@ public partial class Inventory
     {
         if (newQuantity < 0)
             throw new ArgumentException("Stock quantity cannot be negative", nameof(newQuantity));
-        
         StockQuantity = newQuantity;
     }
 
@@ -34,10 +34,8 @@ public partial class Inventory
     {
         if (quantity <= 0)
             throw new ArgumentException("Discount quantity must be greater than zero", nameof(quantity));
-        
         if (StockQuantity < quantity)
             throw new InvalidOperationException("Insufficient stock");
-        
         StockQuantity -= quantity;
     }
 }

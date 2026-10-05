@@ -9,14 +9,11 @@ using NovaTech.TerraTech.Platform.CommunityManagement.Interfaces.REST.Transform;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace NovaTech.TerraTech.Platform.CommunityManagement.Interfaces.REST;
-
 [ApiController]
 [Route("api/v1/comments")]
 [Produces("application/json")]
-[Tags("Communities")] 
-public class CommentsController(
-    ICommentService commentService,
-    ILogger<CommentsController> logger) : ControllerBase
+[Tags("Communities")]
+public class CommentsController(ICommentService commentService, ILogger<CommentsController> logger) : ControllerBase
 {
     [HttpPost]
     [SwaggerOperation(Summary = "Creates a new comment", Description = "Creates a comment for a profile")]
@@ -29,20 +26,20 @@ public class CommentsController(
         {
             var command = CreateCommentCommandFromResourceAssembler.ToCommandFromResource(resource);
             var result = await commentService.Handle(command, cancellationToken);
-            
             if (result.IsSuccess)
             {
-                return CreatedAtAction(nameof(GetCommentById), new { id = result.Value.Id }, 
-                    CommentResourceFromEntityAssembler.ToResourceFromEntity(result.Value));
+                return CreatedAtAction(nameof(GetCommentById), new { id = result.Value.Id }, CommentResourceFromEntityAssembler.ToResourceFromEntity(result.Value));
             }
-            
+
             return (CommunityError)result.Error switch
             {
                 CommunityError.InvalidComment => BadRequest("Invalid comment request data"),
-                _ => Problem(title: "Unexpected server error", detail: "An unexpected error occurred", statusCode: 500)
-            };
+                _ => Problem(title: "Unexpected server error", detail: "An unexpected error occurred", statusCode: 500)};
         }
-        catch (ApiFailure) { throw; }
+        catch (ApiFailure)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating comment");
@@ -71,14 +68,12 @@ public class CommentsController(
     {
         var query = new GetCommentByIdQuery(id);
         var comment = await commentService.Handle(query, cancellationToken);
-        
         if (comment == null)
             return NotFound();
-        
         var resource = CommentResourceFromEntityAssembler.ToResourceFromEntity(comment);
         return Ok(resource);
     }
-    
+
     [HttpPut("{id}")]
     [SwaggerOperation(Summary = "Updates a comment", Description = "Updates the content and rating of an existing comment")]
     [SwaggerResponse(200, "Comment updated", typeof(CommentResource))]
@@ -90,23 +85,24 @@ public class CommentsController(
         {
             var command = new UpdateCommentCommand(id, resource.Content, resource.Rating);
             var result = await commentService.Handle(command, cancellationToken);
-            
             if (result.IsSuccess)
             {
                 return Ok(CommentResourceFromEntityAssembler.ToResourceFromEntity(result.Value));
             }
-            
-            return (CommunityError)result.Error == CommunityError.NotFound ? NotFound("Comment not found") : 
-                Problem(title: "Unexpected server error", statusCode: 500);
+
+            return (CommunityError)result.Error == CommunityError.NotFound ? NotFound("Comment not found") : Problem(title: "Unexpected server error", statusCode: 500);
         }
-        catch (ApiFailure) { throw; }
+        catch (ApiFailure)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error updating comment {Id}", id);
             return Problem(title: "Unexpected server error", statusCode: 500);
         }
     }
-    
+
     [HttpDelete("{id}")]
     [SwaggerOperation(Summary = "Deletes a comment", Description = "Deletes a comment by its ID")]
     [SwaggerResponse(204, "Comment deleted")]
@@ -115,10 +111,8 @@ public class CommentsController(
     {
         var command = new DeleteCommentCommand(id);
         var result = await commentService.Handle(command, cancellationToken);
-
-        if (!result) return NotFound("Comment not found");
-
+        if (!result)
+            return NotFound("Comment not found");
         return NoContent();
     }
-    
 }

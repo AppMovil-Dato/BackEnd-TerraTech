@@ -4,7 +4,6 @@ using NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Queries;
 using NovaTech.TerraTech.Platform.ProfileManagement.Domain.Repositories;
 
 namespace NovaTech.TerraTech.Platform.ProfileManagement.Application.Internal.QueryServices;
-
 public class ProfileQueryService(IProfileRepository profileRepository) : IProfileQueryService
 {
     public async Task<IEnumerable<Profile>> Handle(GetAllProfilesQuery query)

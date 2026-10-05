@@ -21,6 +21,7 @@ public partial class JourneyTests
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
             id = (await Json(response)).GetProperty("id").GetInt32();
         }
+
         await using var restarted = new CloudRunServer(connection.ConnectionString, migrateOnStartup: true);
         var restartClient = restarted.CreateClient();
         Assert.Equal(HttpStatusCode.OK, (await restartClient.GetAsync("/health/ready")).StatusCode);

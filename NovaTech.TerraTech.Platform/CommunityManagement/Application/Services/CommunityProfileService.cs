@@ -8,11 +8,7 @@ using NovaTech.TerraTech.Platform.Shared.Application.Model;
 using NovaTech.TerraTech.Platform.Shared.Domain.Repositories;
 
 namespace NovaTech.TerraTech.Platform.CommunityManagement.Application.Services;
-
-public class CommunityProfileService(
-    ICommunityProfileRepository profileRepository,
-    IUnitOfWork unitOfWork,
-    ILogger<CommunityProfileService> logger) : ICommunityProfileService
+public class CommunityProfileService(ICommunityProfileRepository profileRepository, IUnitOfWork unitOfWork, ILogger<CommunityProfileService> logger) : ICommunityProfileService
 {
     public async Task<Result<CommunityProfile>> Handle(CreateCommunityProfileCommand command, CancellationToken cancellationToken = default)
     {
@@ -35,7 +31,6 @@ public class CommunityProfileService(
         }
     }
 
- 
     public async Task<IEnumerable<CommunityProfile>> Handle(GetAllCommunityProfilesQuery query, CancellationToken cancellationToken = default)
     {
         return await profileRepository.ListAsync(cancellationToken);
@@ -50,7 +45,7 @@ public class CommunityProfileService(
     {
         return await profileRepository.FindByProfileIdAsync(query.ProfileId, cancellationToken);
     }
-    
+
     public async Task<Result<CommunityProfile>> Handle(UpdateCommunityProfileCommand command, CancellationToken cancellationToken = default)
     {
         try
@@ -58,12 +53,9 @@ public class CommunityProfileService(
             var profile = await profileRepository.FindByIdAsync(command.Id, cancellationToken);
             if (profile == null)
                 return Result<CommunityProfile>.Failure(CommunityError.NotFound, "The profile was not found");
-
-            profile.UpdateInformation(command.Nickname,command.ReputationScore, command.PublicBio, command.VisibilityStatus);
-            
+            profile.UpdateInformation(command.Nickname, command.ReputationScore, command.PublicBio, command.VisibilityStatus);
             profileRepository.Update(profile);
             await unitOfWork.CompleteAsync(cancellationToken);
-            
             return Result<CommunityProfile>.Success(profile);
         }
         catch (Exception ex)
@@ -72,22 +64,22 @@ public class CommunityProfileService(
             return Result<CommunityProfile>.Failure(CommunityError.DatabaseError, "An unexpected error occurred while updating the profile");
         }
     }
-    
+
     public async Task<bool> Handle(DeleteCommunityProfileCommand command, CancellationToken cancellationToken = default)
+    {
+        try
         {
-            try
-            {
-                var profile = await profileRepository.FindByIdAsync(command.Id, cancellationToken);
-                if (profile == null) return false;
-    
-                profileRepository.Remove(profile);
-                await unitOfWork.CompleteAsync(cancellationToken);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error deleting community profile {Id}", command.Id);
+            var profile = await profileRepository.FindByIdAsync(command.Id, cancellationToken);
+            if (profile == null)
                 return false;
-            }
+            profileRepository.Remove(profile);
+            await unitOfWork.CompleteAsync(cancellationToken);
+            return true;
         }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error deleting community profile {Id}", command.Id);
+            return false;
+        }
+    }
 }

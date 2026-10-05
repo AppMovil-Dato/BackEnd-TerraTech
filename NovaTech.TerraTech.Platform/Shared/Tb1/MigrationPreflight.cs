@@ -1,6 +1,7 @@
 using System.Data;
 using Microsoft.EntityFrameworkCore;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
+
 namespace NovaTech.TerraTech.Platform.Shared.Tb1;
 public static class MigrationPreflight
 {
@@ -8,10 +9,19 @@ public static class MigrationPreflight
     {
         var connection = db.Database.GetDbConnection();
         await connection.OpenAsync();
-        try {
-            async Task<long> Count(string sql) { using var command = connection.CreateCommand(); command.CommandText = sql; return Convert.ToInt64(await command.ExecuteScalarAsync()); }
-            if (await Count("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'users'") == 0) return;
-            var checks = new Dictionary<string,string> {
+        try
+        {
+            async Task<long> Count(string sql)
+            {
+                using var command = connection.CreateCommand();
+                command.CommandText = sql;
+                return Convert.ToInt64(await command.ExecuteScalarAsync());
+            }
+
+            if (await Count("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'users'") == 0)
+                return;
+            var checks = new Dictionary<string, string>
+            {
                 ["profiles without users"] = "SELECT COUNT(*) FROM profiles p LEFT JOIN users u ON u.id=p.user_id WHERE u.id IS NULL",
                 ["duplicate profiles per user"] = "SELECT COUNT(*) FROM (SELECT user_id FROM profiles GROUP BY user_id HAVING COUNT(*)>1) d",
                 ["fields without profiles"] = "SELECT COUNT(*) FROM fields f LEFT JOIN profiles p ON p.id=f.profile_id WHERE p.id IS NULL",
@@ -25,8 +35,19 @@ public static class MigrationPreflight
                 ["comments without profiles"] = "SELECT COUNT(*) FROM comments c LEFT JOIN profiles a ON a.id=c.author_profile_id LEFT JOIN profiles t ON t.id=c.target_profile_id WHERE a.id IS NULL OR t.id IS NULL"
             };
             var failures = new List<string>();
-            foreach (var (label, sql) in checks) { var count = await Count(sql); if (count > 0) failures.Add($"{label}: {count}"); }
-            if (failures.Count > 0) throw new InvalidOperationException("Migration stopped. Resolve existing data manually, without deleting information automatically: " + string.Join("; ", failures));
-        } finally { await connection.CloseAsync(); }
+            foreach (var(label, sql)in checks)
+            {
+                var count = await Count(sql);
+                if (count > 0)
+                    failures.Add($"{label}: {count}");
+            }
+
+            if (failures.Count > 0)
+                throw new InvalidOperationException("Migration stopped. Resolve existing data manually, without deleting information automatically: " + string.Join("; ", failures));
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
     }
 }

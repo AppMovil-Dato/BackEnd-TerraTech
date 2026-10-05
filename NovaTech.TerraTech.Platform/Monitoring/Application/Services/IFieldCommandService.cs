@@ -3,7 +3,6 @@ using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Commands;
 using NovaTech.TerraTech.Platform.Shared.Application.Model;
 
 namespace NovaTech.TerraTech.Platform.Monitoring.Application.Services;
-
 public interface IFieldCommandService
 {
     Task<Result<Field>> Handle(CreateFieldCommand command, CancellationToken cancellationToken = default);

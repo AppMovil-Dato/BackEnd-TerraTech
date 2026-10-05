@@ -8,11 +8,7 @@ using NovaTech.TerraTech.Platform.Shared.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 
 namespace NovaTech.TerraTech.Platform.NotificationManagement.Application.Services;
-
-public class NotificationService(
-    INotificationRepository notificationRepository,
-    IUnitOfWork unitOfWork,
-    ILogger<NotificationService> logger) : INotificationService
+public class NotificationService(INotificationRepository notificationRepository, IUnitOfWork unitOfWork, ILogger<NotificationService> logger) : INotificationService
 {
     public async Task<Result<Notification>> Handle(CreateNotificationCommand command, CancellationToken cancellationToken = default)
     {
@@ -42,7 +38,6 @@ public class NotificationService(
             var notification = await notificationRepository.FindByIdAsync(command.Id, cancellationToken);
             if (notification == null)
                 return Result<bool>.Failure(NotificationError.NotFound, "The notification was not found");
-
             notification.MarkAsRead();
             notificationRepository.Update(notification);
             await unitOfWork.CompleteAsync(cancellationToken);

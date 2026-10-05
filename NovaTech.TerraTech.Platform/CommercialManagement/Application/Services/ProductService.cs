@@ -8,11 +8,7 @@ using NovaTech.TerraTech.Platform.Shared.Application.Model;
 using NovaTech.TerraTech.Platform.Shared.Domain.Repositories;
 
 namespace NovaTech.TerraTech.Platform.CommercialManagement.Application.Services;
-
-public class ProductService(
-    IProductRepository productRepository,
-    IUnitOfWork unitOfWork,
-    ILogger<ProductService> logger) : IProductService
+public class ProductService(IProductRepository productRepository, IUnitOfWork unitOfWork, ILogger<ProductService> logger) : IProductService
 {
     public async Task<Result<Product>> Handle(CreateProductCommand command, CancellationToken cancellationToken = default)
     {

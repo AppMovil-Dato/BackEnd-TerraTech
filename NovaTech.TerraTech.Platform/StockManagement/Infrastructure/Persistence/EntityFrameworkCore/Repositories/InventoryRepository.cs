@@ -5,12 +5,10 @@ using NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Aggregates;
 using NovaTech.TerraTech.Platform.StockManagement.Domain.Repositories;
 
 namespace NovaTech.TerraTech.Platform.StockManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
-
 public class InventoryRepository(AppDbContext context) : BaseRepository<Inventory>(context), IInventoryRepository
 {
     public async Task<Inventory?> FindByProductIdAsync(int productId, CancellationToken cancellationToken = default)
     {
-        return await Context.Set<Inventory>()
-            .FirstOrDefaultAsync(i => i.ProductId == productId, cancellationToken);
+        return await Context.Set<Inventory>().FirstOrDefaultAsync(i => i.ProductId == productId, cancellationToken);
     }
 }

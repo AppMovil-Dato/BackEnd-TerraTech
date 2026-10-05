@@ -2,16 +2,16 @@ using NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Commands;
 using NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.ValueObjects;
 
 namespace NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates;
-
 public partial class Order
 {
-    protected Order() { }
+    protected Order()
+    {
+    }
 
     public Order(CreateOrderCommand command, Product product)
     {
         ArgumentNullException.ThrowIfNull(command);
         ArgumentNullException.ThrowIfNull(product);
-
         ProfileId = command.ProfileId;
         ProductId = command.ProductId;
         ProductName = product.Name;
@@ -38,7 +38,6 @@ public partial class Order
     {
         if (Status != OrderStatus.Pending)
             throw new InvalidOperationException($"Order cannot be validated. Current status: {Status}");
-
         Status = OrderStatus.Validated;
     }
 
@@ -46,7 +45,6 @@ public partial class Order
     {
         if (newStatus == OrderStatus.Cancelled && Status == OrderStatus.Completed)
             throw new ArgumentException("Cannot cancel a completed order");
-
         Status = newStatus;
     }
 
@@ -54,7 +52,6 @@ public partial class Order
     {
         if (Status != OrderStatus.Validated)
             throw new InvalidOperationException($"Order cannot be marked as paid. Current status: {Status}");
-
         Status = OrderStatus.Paid;
     }
 
@@ -62,7 +59,6 @@ public partial class Order
     {
         if (Status != OrderStatus.Paid)
             throw new InvalidOperationException($"Order cannot be completed. Current status: {Status}");
-
         Status = OrderStatus.Completed;
     }
 }

@@ -1,5 +1,4 @@
-﻿namespace NovaTech.TerraTech.Platform.AnalyticsManagement.Application.Errors;
-
+namespace NovaTech.TerraTech.Platform.AnalyticsManagement.Application.Errors;
 public enum CreateReportError
 {
     InvalidDeviceId,

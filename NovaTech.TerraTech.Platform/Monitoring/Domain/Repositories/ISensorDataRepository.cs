@@ -1,4 +1,5 @@
 using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates;
+
 namespace NovaTech.TerraTech.Platform.Monitoring.Domain.Repositories;
 public interface ISensorDataRepository
 {

@@ -5,7 +5,6 @@ using NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Queries;
 using NovaTech.TerraTech.Platform.Shared.Application.Model;
 
 namespace NovaTech.TerraTech.Platform.CommercialManagement.Application.Services;
-
 public interface IOrderService
 {
     Task<Result<Order>> Handle(CreateOrderCommand command, CancellationToken cancellationToken = default);

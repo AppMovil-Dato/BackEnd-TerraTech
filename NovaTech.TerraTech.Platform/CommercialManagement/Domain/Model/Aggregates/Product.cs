@@ -1,10 +1,11 @@
 using NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Commands;
 
 namespace NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates;
-
 public partial class Product
 {
-    protected Product() { }
+    protected Product()
+    {
+    }
 
     public Product(CreateProductCommand command)
     {

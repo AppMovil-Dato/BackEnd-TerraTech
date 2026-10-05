@@ -7,6 +7,7 @@ using NovaTech.TerraTech.Platform.Iam.Domain.Model.ValueObjects;
 using NovaTech.TerraTech.Platform.Iam.Interface.Rest.Resources;
 using NovaTech.TerraTech.Platform.Iam.Application.Internal.OutboundServices;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
+
 namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest;
 [ApiController, Route("api/v1/authentication"), AllowAnonymous]
 public class AuthenticationController(NovaTech.TerraTech.Platform.Iam.Application.Internal.CommandServices.AccountService accounts, ITokenService tokens) : ControllerBase
@@ -18,10 +19,11 @@ public class AuthenticationController(NovaTech.TerraTech.Platform.Iam.Applicatio
         var token = tokens.GenerateToken(user);
         return Created($"/api/v1/users/{user.Id}", new AuthenticatedUserResource(user.Id, user.EmailAddress.Value, token, user.FullName, new JsonWebToken(token).ValidTo));
     }
+
     [HttpPost("sign-in"), ProducesResponseType<AuthenticatedUserResource>(200)]
     public async Task<IActionResult> SignIn(SignInResource resource, CancellationToken ct)
     {
-        var (user, token) = await accounts.Login(resource.EmailAddress, resource.Password, ct);
+        var(user, token) = await accounts.Login(resource.EmailAddress, resource.Password, ct);
         return Ok(new AuthenticatedUserResource(user.Id, user.EmailAddress.Value, token, user.FullName, new JsonWebToken(token).ValidTo));
     }
 }

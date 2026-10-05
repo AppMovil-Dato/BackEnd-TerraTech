@@ -3,49 +3,31 @@ using NovaTech.TerraTech.Platform.Shared.Domain.Repositories;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 
 namespace NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
-
-/// <summary>
-///     Generic base repository providing CRUD operations for all entity types.
-/// </summary>
-/// <remarks>
-///     This generic repository implements the IBaseRepository contract and provides
-///     common CRUD operations against an EF Core DbContext. Derived repositories
-///     can extend this class to add entity-specific query methods.
-/// </remarks>
-/// <typeparam name="TEntity">The entity type that this repository manages.</typeparam>
-/// <param name="context">The EF Core database context.</param>
-public class BaseRepository<TEntity>(AppDbContext context) : IBaseRepository<TEntity> where TEntity : class {
-    /// <summary>
-    ///     The EF Core <see cref="AppDbContext"/> instance available to derived repositories.
-    /// </summary>
+public class BaseRepository<TEntity>(AppDbContext context) : IBaseRepository<TEntity> where TEntity : class
+{
     protected readonly AppDbContext Context = context;
-
-    /// <inheritdoc />
     public async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        if (entity is NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Aggregates.Inventory inventory) inventory.AssignOwner(Context.CurrentUserId);
+        if (entity is NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Aggregates.Inventory inventory)
+            inventory.AssignOwner(Context.CurrentUserId);
         await Context.Set<TEntity>().AddAsync(entity, cancellationToken);
     }
 
-    /// <inheritdoc />
     public async Task<TEntity?> FindByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await Context.Set<TEntity>().FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id, cancellationToken);
     }
 
-    /// <inheritdoc />
     public void Update(TEntity entity)
     {
         Context.Set<TEntity>().Update(entity);
     }
 
-    /// <inheritdoc />
     public void Remove(TEntity entity)
     {
         Context.Set<TEntity>().Remove(entity);
     }
 
-    /// <inheritdoc />
     public async Task<IEnumerable<TEntity>> ListAsync(CancellationToken cancellationToken = default)
     {
         return await Context.Set<TEntity>().ToListAsync(cancellationToken);

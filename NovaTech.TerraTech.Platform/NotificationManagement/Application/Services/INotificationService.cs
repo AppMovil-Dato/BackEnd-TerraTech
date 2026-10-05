@@ -5,7 +5,6 @@ using NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Queries;
 using NovaTech.TerraTech.Platform.Shared.Application.Model;
 
 namespace NovaTech.TerraTech.Platform.NotificationManagement.Application.Services;
-
 public interface INotificationService
 {
     Task<Result<Notification>> Handle(CreateNotificationCommand command, CancellationToken cancellationToken = default);

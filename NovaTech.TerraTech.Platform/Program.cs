@@ -32,8 +32,6 @@ using NovaTech.TerraTech.Platform.CommercialManagement.Application.Services;
 using NovaTech.TerraTech.Platform.CommercialManagement.Domain.Repositories;
 using NovaTech.TerraTech.Platform.CommercialManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using NovaTech.TerraTech.Platform.Shared.Interfaces.Rest.ProblemDetails;
-
-// Using Bounded Iam
 using NovaTech.TerraTech.Platform.Iam.Application.Acl;
 using NovaTech.TerraTech.Platform.Iam.Application.CommandServices;
 using NovaTech.TerraTech.Platform.Iam.Application.Internal.CommandServices;
@@ -52,33 +50,26 @@ using NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates;
 using NovaTech.TerraTech.Platform.Iam.Infrastructure.Tokens.Jwt.Configuration;
 using NovaTech.TerraTech.Platform.Iam.Infrastructure.Tokens.Jwt.Services;
 using NovaTech.TerraTech.Platform.Iam.Interface.Acl;
-
-// Using Bounded ProfileManagement
 using NovaTech.TerraTech.Platform.ProfileManagement.Application.CommandServices;
 using NovaTech.TerraTech.Platform.ProfileManagement.Application.Internal.CommandServices;
 using NovaTech.TerraTech.Platform.ProfileManagement.Application.Internal.QueryServices;
 using NovaTech.TerraTech.Platform.ProfileManagement.Application.QueryServices;
 using NovaTech.TerraTech.Platform.ProfileManagement.Domain.Repositories;
 using NovaTech.TerraTech.Platform.ProfileManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
-
-
-// Using Bounded CommunityManagement
 using NovaTech.TerraTech.Platform.CommunityManagement.Application.Services;
 using NovaTech.TerraTech.Platform.CommunityManagement.Domain.Repositories;
 using NovaTech.TerraTech.Platform.CommunityManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 
-
 var builder = WebApplication.CreateBuilder(args);
 builder.ConfigureCloudRun();
 builder.Services.AddHealthChecks().AddCheck<DatabaseReadinessCheck>("database", tags: ["ready"]);
-
-// Add services to the container.
-
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
-builder.Services.AddControllers(options => { options.Conventions.Add(new KebabCaseRouteNamingConvention()); options.Filters.Add<OwnershipFilter>(); options.Filters.Add<ProblemDetailsMediaTypeFilter>(int.MaxValue); })
-    .AddDataAnnotationsLocalization();
-
-// Add ProblemDetails services
+builder.Services.AddControllers(options =>
+{
+    options.Conventions.Add(new KebabCaseRouteNamingConvention());
+    options.Filters.Add<OwnershipFilter>();
+    options.Filters.Add<ProblemDetailsMediaTypeFilter>(int.MaxValue);
+}).AddDataAnnotationsLocalization();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddHttpContextAccessor();
@@ -95,190 +86,129 @@ if (string.IsNullOrWhiteSpace(jwtSecret) || Encoding.UTF8.GetByteCount(jwtSecret
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
     options.MapInboundClaims = false;
-    options.TokenValidationParameters = new TokenValidationParameters {
-        ValidateIssuerSigningKey = true, IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-        ValidateLifetime = true, RequireExpirationTime = true, RequireSignedTokens = true,
-        ValidAlgorithms = [SecurityAlgorithms.HmacSha256], ValidateIssuer = false, ValidateAudience = false, ClockSkew = TimeSpan.Zero
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        ValidateLifetime = true,
+        RequireExpirationTime = true,
+        RequireSignedTokens = true,
+        ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ClockSkew = TimeSpan.Zero
     };
-    options.Events = new JwtBearerEvents {
-        OnAuthenticationFailed = context => { context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>().LogWarning("JWT rejected: {FailureType}", context.Exception.GetType().Name); return Task.CompletedTask; },
-        OnTokenValidated = async context => {
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>().LogWarning("JWT rejected: {FailureType}", context.Exception.GetType().Name);
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = async context =>
+        {
             var id = context.Principal!.UserId();
             var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-            if (id <= 0 || !await db.Set<User>().AnyAsync(u => u.Id == id, context.HttpContext.RequestAborted)) context.Fail("Unknown user.");
+            if (id <= 0 || !await db.Set<User>().AnyAsync(u => u.Id == id, context.HttpContext.RequestAborted))
+                context.Fail("Unknown user.");
         },
-        OnChallenge = async context => {
-            context.HandleResponse(); context.Response.StatusCode = 401;
+        OnChallenge = async context =>
+        {
+            context.HandleResponse();
+            context.Response.StatusCode = 401;
             context.Response.Headers.WWWAuthenticate = "Bearer";
             await Results.Problem(statusCode: 401, title: "Authentication required.", extensions: new Dictionary<string, object?> { ["code"] = "UNAUTHENTICATED" }).ExecuteAsync(context.HttpContext);
         }
     };
 });
 builder.Services.AddAuthorization(options => options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
-
-
-// Add CORS Policy
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllPolicy",
-        policy => policy.AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader());
+    options.AddPolicy("AllowAllPolicy", policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
-
-// Add Database Connection
-
-// Configure Database Context and route EF logs through the app logger pipeline.
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 {
     var connectionStringTemplate = builder.Configuration.GetConnectionString("DefaultConnection");
     if (string.IsNullOrWhiteSpace(connectionStringTemplate))
         throw new InvalidOperationException("Database connection string is not set in the configuration.");
-
     var connectionString = Environment.ExpandEnvironmentVariables(connectionStringTemplate);
     if (string.IsNullOrWhiteSpace(connectionString))
         throw new InvalidOperationException("Database connection string is not set in the configuration.");
-
-    options.UseMySQL(connectionString)
-        .UseLoggerFactory(serviceProvider.GetRequiredService<ILoggerFactory>())
-        .EnableDetailedErrors();
-
-
+    options.UseMySQL(connectionString).UseLoggerFactory(serviceProvider.GetRequiredService<ILoggerFactory>()).EnableDetailedErrors();
 });
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-
-// Explicitly register IStringLocalizer for ErrorMessages and Commons
 builder.Services.AddSingleton<IStringLocalizer<ErrorMessages>, StringLocalizer<ErrorMessages>>();
-builder.Services
-    .AddSingleton<IStringLocalizer<CommonMessages>,
-        StringLocalizer<CommonMessages>>();
-
+builder.Services.AddSingleton<IStringLocalizer<CommonMessages>, StringLocalizer<CommonMessages>>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1",
-        new OpenApiInfo
-        {
-            Title = "NovaTech.TerraTech.Platform",
-            Version = "v1",
-            Description = "TerraTech Web Service Platform API",
-            Contact = new OpenApiContact
-            {
-                Name = "NovaTech",
-            },
-            License = new OpenApiLicense
-            {
-                Name = "Apache 2.0",
-                Url = new Uri("https://www.apache.org/licenses/LICENSE-2.0.html")
-            }
-        });
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Please enter token",
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        BearerFormat = "JWT",
-        Scheme = "Bearer"
-    });
-    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-        { [new OpenApiSecuritySchemeReference("Bearer", document)] = [] });
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "NovaTech.TerraTech.Platform", Version = "v1", Description = "TerraTech Web Service Platform API", Contact = new OpenApiContact { Name = "NovaTech", }, License = new OpenApiLicense { Name = "Apache 2.0", Url = new Uri("https://www.apache.org/licenses/LICENSE-2.0.html") } });
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme { In = ParameterLocation.Header, Description = "Please enter token", Name = "Authorization", Type = SecuritySchemeType.Http, BearerFormat = "JWT", Scheme = "Bearer" });
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement { [new OpenApiSecuritySchemeReference("Bearer", document)] = [] });
     options.EnableAnnotations();
     options.OperationFilter<SwaggerSecurityFilter>();
     options.SchemaFilter<RecordRequiredSchemaFilter>();
 });
-
-// Configure Dependency Injection
-
-// Shared Bounded Context Injection Configuration
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<NovaTech.TerraTech.Platform.Shared.Interfaces.Rest.ProblemDetails.ProblemDetailsFactory>();
-
-// Bounded Context Injection Configuration
-// Commercial Management Context
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IProductService, ProductService>();
-
-// Monitoring Context
 builder.Services.AddScoped<IFieldRepository, FieldRepository>();
 builder.Services.AddScoped<IFieldCommandService, FieldCommandService>();
 builder.Services.AddScoped<IFieldQueryService, FieldQueryService>();
-
 builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 builder.Services.AddScoped<IDeviceCommandService, DeviceCommandService>();
 builder.Services.AddScoped<IDeviceQueryService, DeviceQueryService>();
-
-//Profile Context
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IProfileCommandService, ProfileCommandService>();
 builder.Services.AddScoped<IProfileQueryService, ProfileQueryService>();
-
-//Community Management Context
 builder.Services.AddScoped<ICommunityProfileRepository, CommunityProfileRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommunityProfileService, CommunityProfileService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
-
-// AnalyticsManagement Context
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddScoped<IReportCommandService, ReportCommandService>();
 builder.Services.AddScoped<IReportQueryService, ReportQueryService>();
-
-// Stock Management Context
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<IStockService, StockService>();
-
-// Notification Management Context
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-
-// IAM Context
 builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("TokenSettings"));
-
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserCommandService, UserCommandService>();
 builder.Services.AddScoped<IUserQueryService, UserQueryService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IHashingService, HashingService>();
 builder.Services.AddScoped<IIamContextFacade, IamContextFacade>();
-
-// Configuration mediator
-
 builder.Services.AddScoped(typeof(ICommandPipelineBehavior<>), typeof(LoggingCommandBehavior<>));
 builder.Services.AddCortexMediator([typeof(Program)]);
-
 var app = builder.Build();
-if (!app.Environment.IsDevelopment() && args.Any(x => x.StartsWith("--demo-"))) throw new InvalidOperationException("Demo commands are allowed only in Development.");
-
-// Apply schema changes only in an explicit migration job or opted-in local startup.
+if (!app.Environment.IsDevelopment() && args.Any(x => x.StartsWith("--demo-")))
+    throw new InvalidOperationException("Demo commands are allowed only in Development.");
 if (DatabaseStartup.ShouldMigrate(app.Configuration, app.Environment, args))
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<AppDbContext>();
-    await DatabaseInitializer.InitializeAsync(context, app.Lifetime.ApplicationStopping);
-    if (args.Contains("--migrate-only")) return;
-    if (await DemoCommands.Run(app, context, args)) return;
-}
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<AppDbContext>();
+        await DatabaseInitializer.InitializeAsync(context, app.Lifetime.ApplicationStopping);
+        if (args.Contains("--migrate-only"))
+            return;
+        if (await DemoCommands.Run(app, context, args))
+            return;
+    }
 
-// Cloud Run terminates HTTPS; honor its forwarded scheme before generating URLs.
-if (CloudRunConfiguration.IsCloudRunService(app.Configuration)) app.UseForwardedHeaders();
-
-// Configure the HTTP request pipeline.
+if (CloudRunConfiguration.IsCloudRunService(app.Configuration))
+    app.UseForwardedHeaders();
 app.UseExceptionHandler();
-
-var supportedCultures = new[] { "en", "es" };
-var localizationOptions = new RequestLocalizationOptions()
-    .SetDefaultCulture(supportedCultures[0])
-    .AddSupportedCultures(supportedCultures)
-    .AddSupportedUICultures(supportedCultures);
-
+var supportedCultures = new[]
+{
+    "en",
+    "es"
+};
+var localizationOptions = new RequestLocalizationOptions().SetDefaultCulture(supportedCultures[0]).AddSupportedCultures(supportedCultures).AddSupportedUICultures(supportedCultures);
 app.UseRequestLocalization(localizationOptions);
-
 if (app.Environment.IsProduction())
 {
     app.UseSwagger();
@@ -291,25 +221,29 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Apply CORS Policy
 app.UseCors("AllowAllPolicy");
-
-// Add Authorization Middleware to Pipeline
-// Cloud Run terminates HTTPS at its ingress; the container serves HTTP.
-
 app.UseRouting();
-app.Use(async (context, next) => { if (context.GetEndpoint() == null) { await Results.Problem(statusCode: 404, title: "Route was not found.").ExecuteAsync(context); return; } await next(); });
-app.UseStatusCodePages(async context => {
+app.Use(async (context, next) =>
+{
+    if (context.GetEndpoint() == null)
+    {
+        await Results.Problem(statusCode: 404, title: "Route was not found.").ExecuteAsync(context);
+        return;
+    }
+
+    await next();
+});
+app.UseStatusCodePages(async context =>
+{
     var status = context.HttpContext.Response.StatusCode;
     await Results.Problem(statusCode: status, title: status == 404 ? "Route was not found." : "Request failed.").ExecuteAsync(context.HttpContext);
 });
 app.UseAuthentication();
-
 app.UseAuthorization();
-
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") }).AllowAnonymous();
 app.MapControllers();
-
 app.Run();
-public partial class Program { }
+public partial class Program
+{
+}

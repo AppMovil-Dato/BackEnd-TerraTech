@@ -10,14 +10,11 @@ using NovaTech.TerraTech.Platform.StockManagement.Interfaces.REST.Transform;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace NovaTech.TerraTech.Platform.StockManagement.Interfaces.REST;
-
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
 [Tags("Stocks")]
-public class InventoriesController(
-    IStockService stockService,
-    ILogger<InventoriesController> logger) : ControllerBase
+public class InventoriesController(IStockService stockService, ILogger<InventoriesController> logger) : ControllerBase
 {
     [HttpPost]
     [SwaggerOperation(Summary = "Creates a new inventories item", Description = "Creates an inventories item for a product")]
@@ -30,27 +27,24 @@ public class InventoriesController(
         {
             var command = CreateInventoryCommandFromResourceAssembler.ToCommandFromResource(resource);
             var result = await stockService.Handle(command, cancellationToken);
-            
             if (result.IsSuccess)
             {
-                return CreatedAtAction(nameof(GetInventoryById), new { id = result.Value.Id }, 
-                    InventoryResourceFromEntityAssembler.ToResourceFromEntity(result.Value));
+                return CreatedAtAction(nameof(GetInventoryById), new { id = result.Value.Id }, InventoryResourceFromEntityAssembler.ToResourceFromEntity(result.Value));
             }
-            
+
             return (StockError)result.Error switch
             {
-                StockError.InvalidProductId or StockError.InvalidStockQuantity 
-                    => BadRequest("Invalid inventory request"),
-                _ => Problem(title: "Unexpected server error", 
-                    detail: "An unexpected error occurred while processing your request", statusCode: 500)
-            };
+                StockError.InvalidProductId or StockError.InvalidStockQuantity => BadRequest("Invalid inventory request"),
+                _ => Problem(title: "Unexpected server error", detail: "An unexpected error occurred while processing your request", statusCode: 500)};
         }
-        catch (ApiFailure) { throw; }
+        catch (ApiFailure)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating inventory");
-            return Problem(title: "Unexpected server error", 
-                detail: "An unexpected error occurred while processing your request", statusCode: 500);
+            return Problem(title: "Unexpected server error", detail: "An unexpected error occurred while processing your request", statusCode: 500);
         }
     }
 
@@ -65,16 +59,17 @@ public class InventoriesController(
         {
             var command = new UpdateInventoryCommand(id, resource.StockQuantity);
             var result = await stockService.Handle(command, cancellationToken);
-            
             if (result.IsSuccess)
             {
                 return Ok(InventoryResourceFromEntityAssembler.ToResourceFromEntity(result.Value));
             }
-            
-            return (StockError)result.Error == StockError.NotFound ? NotFound() : 
-                Problem(title: "Unexpected server error", statusCode: 500);
+
+            return (StockError)result.Error == StockError.NotFound ? NotFound() : Problem(title: "Unexpected server error", statusCode: 500);
         }
-        catch (ApiFailure) { throw; }
+        catch (ApiFailure)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error updating inventory {Id}", id);
@@ -101,10 +96,8 @@ public class InventoriesController(
     {
         var query = new GetInventoryByIdQuery(id);
         var inventory = await stockService.Handle(query, cancellationToken);
-        
         if (inventory == null)
             return NotFound();
-        
         var resource = InventoryResourceFromEntityAssembler.ToResourceFromEntity(inventory);
         return Ok(resource);
     }

@@ -9,12 +9,7 @@ using NovaTech.TerraTech.Platform.Shared.Application.Model;
 using NovaTech.TerraTech.Platform.Shared.Domain.Repositories;
 
 namespace NovaTech.TerraTech.Platform.CommercialManagement.Application.Services;
-
-public class OrderService(
-    IOrderRepository orderRepository,
-    IProductRepository productRepository,
-    IUnitOfWork unitOfWork,
-    ILogger<OrderService> logger) : IOrderService
+public class OrderService(IOrderRepository orderRepository, IProductRepository productRepository, IUnitOfWork unitOfWork, ILogger<OrderService> logger) : IOrderService
 {
     public async Task<Result<Order>> Handle(CreateOrderCommand command, CancellationToken cancellationToken = default)
     {
@@ -23,7 +18,6 @@ public class OrderService(
             var product = await productRepository.FindByIdAsync(command.ProductId, cancellationToken);
             if (product == null)
                 return Result<Order>.Failure(CommercialError.InvalidProductId, "The specified product was not found");
-
             var order = new Order(command, product);
             await orderRepository.AddAsync(order, cancellationToken);
             await unitOfWork.CompleteAsync(cancellationToken);
@@ -48,7 +42,6 @@ public class OrderService(
             var order = await orderRepository.FindByIdAsync(command.OrderId, cancellationToken);
             if (order == null)
                 return Result<Order>.Failure(CommercialError.NotFound, "The order was not found");
-
             order.Validate();
             orderRepository.Update(order);
             await unitOfWork.CompleteAsync(cancellationToken);
@@ -73,7 +66,6 @@ public class OrderService(
             var order = await orderRepository.FindByIdAsync(command.OrderId, cancellationToken);
             if (order == null)
                 return Result<Order>.Failure(CommercialError.NotFound, "The order was not found");
-
             order.UpdateStatus(command.NewStatus);
             orderRepository.Update(order);
             await unitOfWork.CompleteAsync(cancellationToken);

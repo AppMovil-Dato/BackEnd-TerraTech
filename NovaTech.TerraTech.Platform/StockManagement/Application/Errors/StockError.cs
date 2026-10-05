@@ -1,5 +1,4 @@
 namespace NovaTech.TerraTech.Platform.StockManagement.Application.Errors;
-
 public enum StockError
 {
     NotFound,

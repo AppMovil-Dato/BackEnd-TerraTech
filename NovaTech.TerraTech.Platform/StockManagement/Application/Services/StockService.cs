@@ -8,11 +8,7 @@ using NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Queries;
 using NovaTech.TerraTech.Platform.StockManagement.Domain.Repositories;
 
 namespace NovaTech.TerraTech.Platform.StockManagement.Application.Services;
-
-public class StockService(
-    IInventoryRepository inventoryRepository,
-    IUnitOfWork unitOfWork,
-    ILogger<StockService> logger) : IStockService
+public class StockService(IInventoryRepository inventoryRepository, IUnitOfWork unitOfWork, ILogger<StockService> logger) : IStockService
 {
     public async Task<Result<Inventory>> Handle(CreateInventoryCommand command, CancellationToken cancellationToken = default)
     {
@@ -42,10 +38,8 @@ public class StockService(
             var inventory = await inventoryRepository.FindByIdAsync(command.Id, cancellationToken);
             if (inventory == null)
                 return Result<Inventory>.Failure(StockError.NotFound, "The inventory item was not found");
-
             if (command.StockQuantity < 0)
                 return Result<Inventory>.Failure(StockError.InvalidStockQuantity, "Stock quantity cannot be negative");
-
             inventory.UpdateStock(command.StockQuantity);
             inventoryRepository.Update(inventory);
             await unitOfWork.CompleteAsync(cancellationToken);

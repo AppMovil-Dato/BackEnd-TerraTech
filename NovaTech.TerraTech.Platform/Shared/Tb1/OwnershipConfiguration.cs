@@ -9,6 +9,7 @@ using NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Aggregates
 using NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Aggregates;
 using NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.Aggregates;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
+
 namespace NovaTech.TerraTech.Platform.Shared.Tb1;
 public static class OwnershipConfiguration
 {

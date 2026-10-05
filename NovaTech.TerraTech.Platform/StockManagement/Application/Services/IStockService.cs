@@ -5,7 +5,6 @@ using NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Commands;
 using NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Queries;
 
 namespace NovaTech.TerraTech.Platform.StockManagement.Application.Services;
-
 public interface IStockService
 {
     Task<Result<Inventory>> Handle(CreateInventoryCommand command, CancellationToken cancellationToken = default);

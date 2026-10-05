@@ -6,22 +6,15 @@ using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFramew
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 
 namespace NovaTech.TerraTech.Platform.CommercialManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
-
 public class OrderRepository(AppDbContext context) : BaseRepository<Order>(context), IOrderRepository
 {
     public async Task<IEnumerable<Order>> FindByProfileIdAsync(int profileId, CancellationToken cancellationToken = default)
     {
-        return await Context.Set<Order>()
-            .Where(o => o.ProfileId == profileId)
-            .OrderByDescending(o => o.CreatedAt)
-            .ToListAsync(cancellationToken);
+        return await Context.Set<Order>().Where(o => o.ProfileId == profileId).OrderByDescending(o => o.CreatedAt).ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<Order>> FindByStatusAsync(OrderStatus status, CancellationToken cancellationToken = default)
     {
-        return await Context.Set<Order>()
-            .Where(o => o.Status == status)
-            .OrderByDescending(o => o.CreatedAt)
-            .ToListAsync(cancellationToken);
+        return await Context.Set<Order>().Where(o => o.Status == status).OrderByDescending(o => o.CreatedAt).ToListAsync(cancellationToken);
     }
 }

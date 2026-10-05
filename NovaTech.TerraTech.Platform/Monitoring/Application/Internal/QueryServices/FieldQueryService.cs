@@ -6,37 +6,15 @@ using NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Resources;
 using NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Transform;
 
 namespace NovaTech.TerraTech.Platform.Monitoring.Application.Internal.QueryServices;
-
-/// <summary>
-/// Query service implementation for Field aggregates.
-/// </summary>
-/// <param name="fieldRepository">The field repository.</param>
-/// <param name="logger">The logger.</param>
-/// <remarks>
-/// Author: Guillermo Howard Robles - u202222275
-/// </remarks>
-public class FieldQueryService(
-    IFieldRepository fieldRepository,
-    ILogger<FieldQueryService> logger)
-    : IFieldQueryService
+public class FieldQueryService(IFieldRepository fieldRepository, ILogger<FieldQueryService> logger) : IFieldQueryService
 {
-    public async Task<Field?> GetFieldByIdAsync(int fieldId, CancellationToken cancellationToken = default)
-        => await fieldRepository.FindByIdAsync(fieldId, cancellationToken);
-
-    public async Task<IEnumerable<Field>> GetAllFieldsAsync(CancellationToken cancellationToken = default)
-        => await fieldRepository.ListAsync(cancellationToken);
-
-    public async Task<IEnumerable<Field>> GetFieldsBySoilTypeAsync(SoilType soilType, CancellationToken cancellationToken = default)
-        => await fieldRepository.FindBySoilTypeAsync(soilType, cancellationToken);
-
-    /// <summary>
-    /// Gets all fields and returns them as resources, skipping any that fail to map.
-    /// </summary>
+    public async Task<Field?> GetFieldByIdAsync(int fieldId, CancellationToken cancellationToken = default) => await fieldRepository.FindByIdAsync(fieldId, cancellationToken);
+    public async Task<IEnumerable<Field>> GetAllFieldsAsync(CancellationToken cancellationToken = default) => await fieldRepository.ListAsync(cancellationToken);
+    public async Task<IEnumerable<Field>> GetFieldsBySoilTypeAsync(SoilType soilType, CancellationToken cancellationToken = default) => await fieldRepository.FindBySoilTypeAsync(soilType, cancellationToken);
     public async Task<IEnumerable<FieldResource>> GetAllFieldResourcesAsync(CancellationToken cancellationToken = default)
     {
         var fields = await fieldRepository.ListAsync(cancellationToken);
         var resources = new List<FieldResource>();
-
         foreach (var field in fields)
         {
             try

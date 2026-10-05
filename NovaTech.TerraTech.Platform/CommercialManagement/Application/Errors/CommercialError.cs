@@ -1,5 +1,4 @@
 namespace NovaTech.TerraTech.Platform.CommercialManagement.Application.Errors;
-
 public enum CommercialError
 {
     NotFound,

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
+
 namespace NovaTech.TerraTech.Platform.Shared.Tb1;
 public class DesignTimeFactory : IDesignTimeDbContextFactory<AppDbContext>
 {

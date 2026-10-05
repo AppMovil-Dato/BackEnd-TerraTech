@@ -1,8 +1,7 @@
-﻿using NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.Commands;
+using NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.Commands;
 using NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.ValueObjects;
 
 namespace NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.Aggregates;
-
 public partial class Report
 {
     protected Report()
@@ -18,7 +17,6 @@ public partial class Report
     public Report(CreateReportCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);
-        
         DeviceId = command.DeviceId;
         GeneratedAt = command.GeneratedAt;
         MeanValue = command.MeanValue;
@@ -26,7 +24,7 @@ public partial class Report
         StandardDeviation = command.StandardDeviation;
         TechnicalInterpretation = command.TechnicalInterpretation;
     }
-    
+
     public int Id { get; private set; }
     public DeviceId DeviceId { get; private set; }
     public GeneratedAt GeneratedAt { get; private set; }
@@ -34,7 +32,7 @@ public partial class Report
     public Variance Variance { get; private set; }
     public StandardDeviation StandardDeviation { get; private set; }
     public TechnicalInterpretation TechnicalInterpretation { get; private set; }
-    
+
     public void UpdateStatistics(double mean, double variance, double stdDev, string interpretation)
     {
         MeanValue = new MeanValue(mean);

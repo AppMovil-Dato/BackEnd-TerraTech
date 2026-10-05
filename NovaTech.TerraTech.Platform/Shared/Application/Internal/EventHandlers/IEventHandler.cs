@@ -1,8 +1,7 @@
-﻿using NovaTech.TerraTech.Platform.Shared.Domain.Model.Events;
+using NovaTech.TerraTech.Platform.Shared.Domain.Model.Events;
 using Cortex.Mediator.Notifications;
 
 namespace NovaTech.TerraTech.Platform.Shared.Application.Internal.EventHandlers;
-
 public interface IEventHandler<in TEvent> : INotificationHandler<TEvent> where TEvent : IEvent
 {
 }

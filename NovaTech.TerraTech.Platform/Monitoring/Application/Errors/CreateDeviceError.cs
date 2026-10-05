@@ -1,5 +1,4 @@
-﻿namespace NovaTech.TerraTech.Platform.Monitoring.Application.Errors;
-
+namespace NovaTech.TerraTech.Platform.Monitoring.Application.Errors;
 public enum CreateDeviceError
 {
     InvalidMacAddress,

@@ -1,5 +1,4 @@
 namespace NovaTech.TerraTech.Platform.NotificationManagement.Application.Errors;
-
 public enum NotificationError
 {
     NotFound,

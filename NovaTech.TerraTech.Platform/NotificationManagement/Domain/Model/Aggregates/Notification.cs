@@ -1,15 +1,15 @@
 using NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Commands;
 
 namespace NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Aggregates;
-
 public partial class Notification
 {
-    protected Notification() { }
+    protected Notification()
+    {
+    }
 
     public Notification(CreateNotificationCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);
-        
         ProfileId = command.ProfileId;
         Title = command.Title;
         Message = command.Message;

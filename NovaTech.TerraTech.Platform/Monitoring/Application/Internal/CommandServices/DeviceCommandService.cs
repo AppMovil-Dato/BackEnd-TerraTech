@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using NovaTech.TerraTech.Platform.Monitoring.Application.Errors;
 using NovaTech.TerraTech.Platform.Monitoring.Application.Services;
 using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates;
@@ -9,12 +9,7 @@ using NovaTech.TerraTech.Platform.Shared.Application.Model;
 using NovaTech.TerraTech.Platform.Shared.Domain.Repositories;
 
 namespace NovaTech.TerraTech.Platform.Monitoring.Application.Internal.CommandServices;
-
-public class DeviceCommandService(
-    IDeviceRepository deviceRepository,
-    IUnitOfWork unitOfWork,
-    ILogger<DeviceCommandService> logger, SensorRegistrationService registration)
-    : IDeviceCommandService
+public class DeviceCommandService(IDeviceRepository deviceRepository, IUnitOfWork unitOfWork, ILogger<DeviceCommandService> logger, SensorRegistrationService registration) : IDeviceCommandService
 {
     public async Task<Result<Device>> Handle(CreateDeviceCommand command, CancellationToken cancellationToken = default)
     {
@@ -30,26 +25,21 @@ public class DeviceCommandService(
             if (device is null)
             {
                 logger.LogWarning("Device with id {Id} not found for update", command.Id);
-                return Result<Device>.Failure(
-                    CreateDeviceError.DeviceNotFound,
-                    $"Device with id {command.Id} not found.");
+                return Result<Device>.Failure(CreateDeviceError.DeviceNotFound, $"Device with id {command.Id} not found.");
             }
-            
+
             var existingDevice = await deviceRepository.FindByMacAddressAsync(command.MacAddress, cancellationToken);
             if (existingDevice is not null && existingDevice.Id != command.Id)
             {
                 logger.LogWarning("MAC {MacAddress} already used by another device", command.MacAddress);
-                return Result<Device>.Failure(
-                    CreateDeviceError.DuplicateDevice,
-                    $"MAC address {command.MacAddress} is already in use.");
+                return Result<Device>.Failure(CreateDeviceError.DuplicateDevice, $"MAC address {command.MacAddress} is already in use.");
             }
-            
+
             if (device.MacAddress.Value.Replace('-', ':').ToUpperInvariant() != command.MacAddress.Value.Replace('-', ':').ToUpperInvariant())
                 return Result<Device>.Failure(CreateDeviceError.InvalidData, "Registered MAC cannot be changed.");
             device.Update(command);
             deviceRepository.Update(device);
             await unitOfWork.CompleteAsync(cancellationToken);
-            
             logger.LogInformation("Device {Id} updated successfully", command.Id);
             return Result<Device>.Success(device);
         }
@@ -64,7 +54,7 @@ public class DeviceCommandService(
             return Result<Device>.Failure(CreateDeviceError.UnexpectedError, ex.Message);
         }
     }
-    
+
     public async Task<Result<Device>> Handle(DeleteDeviceCommand command, CancellationToken cancellationToken = default)
     {
         try
@@ -73,14 +63,11 @@ public class DeviceCommandService(
             if (device is null)
             {
                 logger.LogWarning("Device with id {Id} not found for deletion", command.Id);
-                return Result<Device>.Failure(
-                    CreateDeviceError.DeviceNotFound,
-                    $"Device with id {command.Id} not found.");
+                return Result<Device>.Failure(CreateDeviceError.DeviceNotFound, $"Device with id {command.Id} not found.");
             }
 
             deviceRepository.Remove(device);
             await unitOfWork.CompleteAsync(cancellationToken);
-
             logger.LogInformation("Device {Id} deleted successfully", command.Id);
             return Result<Device>.Success(device);
         }
@@ -95,13 +82,13 @@ public class DeviceCommandService(
     {
         for (Exception? current = exception; current is not null; current = current.InnerException)
         {
-            if (!string.Equals(current.GetType().Name, "MySqlException", StringComparison.Ordinal)) continue;
+            if (!string.Equals(current.GetType().Name, "MySqlException", StringComparison.Ordinal))
+                continue;
             var numberProperty = current.GetType().GetProperty("Number");
-            if (numberProperty?.PropertyType == typeof(int) &&
-                numberProperty.GetValue(current) is int errorCode &&
-                errorCode == 1062)
+            if (numberProperty?.PropertyType == typeof(int) && numberProperty.GetValue(current)is int errorCode && errorCode == 1062)
                 return true;
         }
+
         return false;
     }
 }

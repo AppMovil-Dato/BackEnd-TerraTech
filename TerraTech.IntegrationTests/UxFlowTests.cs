@@ -12,7 +12,7 @@ public partial class JourneyTests
     public async Task SignupReturnsAnImmediatelyUsableEightHourSession()
     {
         var client = server.CreateClient();
-        var response = await client.PostAsJsonAsync("/api/v1/authentication/sign-up", Registration(Guid.NewGuid()+"@test.example"));
+        var response = await client.PostAsJsonAsync("/api/v1/authentication/sign-up", Registration(Guid.NewGuid() + "@test.example"));
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var user = await Json(response);
         var token = user.GetProperty("token").GetString();
@@ -26,9 +26,36 @@ public partial class JourneyTests
         Assert.Equal(user.GetProperty("id").GetInt32(), (await Json(me)).GetProperty("id").GetInt32());
     }
 
-    private static object[] Rectangle() => [new { latitude = -14d, longitude = -75d }, new { latitude = -14d, longitude = -74.999d }, new { latitude = -14.001d, longitude = -74.999d }, new { latitude = -14.001d, longitude = -75d }];
-    private static object MappedField(int profile, object[] boundary) => new { profileId = profile, name = "Mapped parcel", sizeM2 = 1, soilType = "Sin especificar", latitude = 0, longitude = 0, cropName = "Papa", boundary };
+    private static object[] Rectangle() => [new
+    {
+        latitude = -14d,
+        longitude = -75d
+    }, new
+    {
+        latitude = -14d,
+        longitude = -74.999d
+    }, new
+    {
+        latitude = -14.001d,
+        longitude = -74.999d
+    }, new
+    {
+        latitude = -14.001d,
+        longitude = -75d
+    }
 
+    ];
+    private static object MappedField(int profile, object[] boundary) => new
+    {
+        profileId = profile,
+        name = "Mapped parcel",
+        sizeM2 = 1,
+        soilType = "Sin especificar",
+        latitude = 0,
+        longitude = 0,
+        cropName = "Papa",
+        boundary
+    };
     [Fact]
     public async Task PolygonIsPersistedComputesAreaAndLegacyUpdateKeepsIt()
     {
@@ -36,13 +63,15 @@ public partial class JourneyTests
         var polygon = Rectangle();
         var created = await a.client.PostAsJsonAsync("/api/v1/fields", MappedField(a.profileId, [..polygon, polygon[0]]));
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
-        var field = await Json(created); var id = field.GetProperty("id").GetInt32();
+        var field = await Json(created);
+        var id = field.GetProperty("id").GetInt32();
         Assert.Equal(4, field.GetProperty("boundary").GetArrayLength());
         Assert.InRange(field.GetProperty("sizeM2").GetDouble(), 11990, 12010);
         Assert.Equal(-14.0005, field.GetProperty("latitude").GetDouble(), 6);
         var update = await a.client.PutAsJsonAsync($"/api/v1/fields/{id}", new { name = "Updated parcel", sizeM2 = 2, soilType = "Franco", latitude = 0, longitude = 0, cropName = "Papa" });
         Assert.Equal(HttpStatusCode.OK, update.StatusCode);
-        await server.WithDb(async db => {
+        await server.WithDb(async db =>
+        {
             var saved = await db.Set<Field>().IgnoreQueryFilters().SingleAsync(f => f.Id == id);
             Assert.Equal(4, saved.Boundary!.Count);
             Assert.InRange(saved.SizeM2.Value, 11990, 12010);
@@ -58,35 +87,66 @@ public partial class JourneyTests
     }
 
     [Theory]
-    [InlineData("cross")][InlineData("too-few")][InlineData("duplicate")][InlineData("collinear")][InlineData("range")]
+    [InlineData("cross")]
+    [InlineData("too-few")]
+    [InlineData("duplicate")]
+    [InlineData("collinear")]
+    [InlineData("range")]
     public async Task InvalidPolygonIsRejectedWithoutCreatingField(string kind)
     {
-        var a = await Account(); var p = Rectangle();
-        object[] bad = kind switch {
+        var a = await Account();
+        var p = Rectangle();
+        object[] bad = kind switch
+        {
             "cross" => [p[0], p[2], p[1], p[3]],
             "too-few" => [p[0], p[1]],
             "duplicate" => [p[0], p[1], p[0], p[2]],
-            "collinear" => [new { latitude = 1, longitude = 1 }, new { latitude = 2, longitude = 2 }, new { latitude = 3, longitude = 3 }],
-            _ => [new { latitude = 91, longitude = 1 }, p[1], p[2]]
+            "collinear" => [new
+            {
+                latitude = 1,
+                longitude = 1
+            }, new
+            {
+                latitude = 2,
+                longitude = 2
+            }, new
+            {
+                latitude = 3,
+                longitude = 3
+            }
+
+            ],
+            _ => [new
+            {
+                latitude = 91,
+                longitude = 1
+            }, p[1], p[2]]
         };
         var response = await a.client.PostAsJsonAsync("/api/v1/fields", MappedField(a.profileId, bad));
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         Assert.Single((await Json(await a.client.GetAsync("/api/v1/fields"))).EnumerateArray());
     }
+
     [Fact]
     public async Task LegacyControllersAlsoAdvertiseProblemDetailsForErrors()
     {
         var a = await Account();
-        foreach (var path in new[] { "/api/v1/fields/2147483647", "/api/v1/devices/2147483647" })
+        foreach (var path in new[]
+        {
+            "/api/v1/fields/2147483647",
+            "/api/v1/devices/2147483647"
+        }
+
+        )
         {
             var response = await a.client.GetAsync(path);
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
             Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         }
+
         var unknown = await a.client.PostAsJsonAsync("/api/v1/devices/register", new { sensorCode = "TT-UNKNWN", fieldId = a.fieldId, name = "Unknown" });
         Assert.Equal(HttpStatusCode.BadRequest, unknown.StatusCode);
         Assert.Equal("application/problem+json", unknown.Content.Headers.ContentType?.MediaType);
     }
-
 }

@@ -7,10 +7,8 @@ using NovaTech.TerraTech.Platform.Shared.Interfaces.Rest.ProblemDetails;
 using NovaTech.TerraTech.Platform.Shared.Resources.Errors;
 
 namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest.Transform;
-
 public static class IamActionResultAssembler
 {
-
     private static int ToStatusCodeFromIamError(IamError error)
     {
         return error switch
@@ -20,71 +18,44 @@ public static class IamActionResultAssembler
             IamError.OperationCancelled => StatusCodes.Status409Conflict,
             IamError.DatabaseError => StatusCodes.Status500InternalServerError,
             IamError.InternalServerError => StatusCodes.Status500InternalServerError,
-            IamError.ExternalServiceError => StatusCodes
-                .Status503ServiceUnavailable, // Assuming 503 for external service issues
-            _ => StatusCodes.Status400BadRequest // Default
+            IamError.ExternalServiceError => StatusCodes.Status503ServiceUnavailable,
+            _ => StatusCodes.Status400BadRequest
         };
     }
-    
 
-    public static IActionResult ToActionResultFromSignInResult(
-        ControllerBase controller,
-        Result<(User user, string token)> result,
-        IStringLocalizer<ErrorMessages> errorLocalizer,
-        ProblemDetailsFactory problemDetailsFactory,
-        Func<(User user, string token), IActionResult> successAction)
+    public static IActionResult ToActionResultFromSignInResult(ControllerBase controller, Result<(User user, string token)> result, IStringLocalizer<ErrorMessages> errorLocalizer, ProblemDetailsFactory problemDetailsFactory, Func<(User user, string token), IActionResult> successAction)
     {
-        if (result.IsSuccess) return successAction(result.Value!);
-
+        if (result.IsSuccess)
+            return successAction(result.Value!);
         var statusCode = ToStatusCodeFromIamError((IamError)result.Error!);
         return problemDetailsFactory.CreateProblemDetails(controller, statusCode, result.Error, result.Message);
     }
-    
 
-    public static IActionResult ToActionResultFromSignUpResult(
-        ControllerBase controller,
-        Result result, // Non-generic Result
-        IStringLocalizer<ErrorMessages> errorLocalizer,
-        ProblemDetailsFactory problemDetailsFactory,
-        Func<IActionResult> successAction)
+    public static IActionResult ToActionResultFromSignUpResult(ControllerBase controller, Result result, IStringLocalizer<ErrorMessages> errorLocalizer, ProblemDetailsFactory problemDetailsFactory, Func<IActionResult> successAction)
     {
-        if (result.IsSuccess) return successAction();
-
+        if (result.IsSuccess)
+            return successAction();
         var statusCode = ToStatusCodeFromIamError((IamError)result.Error!);
         return problemDetailsFactory.CreateProblemDetails(controller, statusCode, result.Error, result.Message);
     }
-    
-    public static IActionResult ToActionResultFromGetUserByIdResult(
-        ControllerBase controller, User? user,
-        IStringLocalizer<ErrorMessages> errorLocalizer, ProblemDetailsFactory problemDetailsFactory,
-        Func<User, IActionResult> successAction)
+
+    public static IActionResult ToActionResultFromGetUserByIdResult(ControllerBase controller, User? user, IStringLocalizer<ErrorMessages> errorLocalizer, ProblemDetailsFactory problemDetailsFactory, Func<User, IActionResult> successAction)
     {
         if (user is null)
         {
-            return problemDetailsFactory.CreateProblemDetails(
-                controller,
-                ToStatusCodeFromIamError(IamError.UserNotFound),
-                IamError.UserNotFound,
-                errorLocalizer[nameof(IamError.UserNotFound)]
-                );
+            return problemDetailsFactory.CreateProblemDetails(controller, ToStatusCodeFromIamError(IamError.UserNotFound), IamError.UserNotFound, errorLocalizer[nameof(IamError.UserNotFound)]);
         }
+
         return successAction(user);
     }
 
-    public static IActionResult ToActionResultFromGetUserByEmailResult(
-        ControllerBase controller, User? user,
-        IStringLocalizer<ErrorMessages> errorLocalizer, ProblemDetailsFactory problemDetailsFactory,
-        Func<User, IActionResult> successAction)
+    public static IActionResult ToActionResultFromGetUserByEmailResult(ControllerBase controller, User? user, IStringLocalizer<ErrorMessages> errorLocalizer, ProblemDetailsFactory problemDetailsFactory, Func<User, IActionResult> successAction)
     {
         if (user is null)
         {
-            return problemDetailsFactory.CreateProblemDetails(
-                controller,
-                ToStatusCodeFromIamError(IamError.UserNotFound),
-                IamError.UserNotFound,
-                errorLocalizer[nameof(IamError.UserNotFound)]
-            );
+            return problemDetailsFactory.CreateProblemDetails(controller, ToStatusCodeFromIamError(IamError.UserNotFound), IamError.UserNotFound, errorLocalizer[nameof(IamError.UserNotFound)]);
         }
+
         return successAction(user);
     }
 }

@@ -8,27 +8,15 @@ using NovaTech.TerraTech.Platform.Shared.Application.Model;
 using NovaTech.TerraTech.Platform.Shared.Domain.Repositories;
 
 namespace NovaTech.TerraTech.Platform.Monitoring.Application.Internal.CommandServices;
-
-public class FieldCommandService(
-    IFieldRepository fieldRepository,
-    IUnitOfWork unitOfWork,
-    ILogger<FieldCommandService> logger)
-    : IFieldCommandService
+public class FieldCommandService(IFieldRepository fieldRepository, IUnitOfWork unitOfWork, ILogger<FieldCommandService> logger) : IFieldCommandService
 {
-    public async Task<Result<Field>> Handle(CreateFieldCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<Field>> Handle(CreateFieldCommand command, CancellationToken cancellationToken = default)
     {
-        var existingSource =
-            await fieldRepository.FindBySoilTypeAndLocationLatLongAsync(command.SoilType, command.LocationLatLong,
-                cancellationToken);
+        var existingSource = await fieldRepository.FindBySoilTypeAndLocationLatLongAsync(command.SoilType, command.LocationLatLong, cancellationToken);
         if (existingSource != null)
         {
-            logger.LogWarning(
-                "Duplicate field rejected for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
-                command.SoilType,
-                command.LocationLatLong);
-            return Result<Field>.Failure(
-                CreateFieldError.DuplicateField, "A field with the same soil type and location already exists.");
+            logger.LogWarning("Duplicate field rejected for SoilType {SoilType} and LocationLatLong {LocationLatLong}", command.SoilType, command.LocationLatLong);
+            return Result<Field>.Failure(CreateFieldError.DuplicateField, "A field with the same soil type and location already exists.");
         }
 
         try
@@ -40,44 +28,27 @@ public class FieldCommandService(
         }
         catch (ArgumentException ex)
         {
-            logger.LogWarning(ex,
-                "Invalid arguments while creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
-                command.SoilType,
-                command.LocationLatLong);
-            return Result<Field>.Failure(
-                CreateFieldError.InvalidData, ex.Message);
+            logger.LogWarning(ex, "Invalid arguments while creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}", command.SoilType, command.LocationLatLong);
+            return Result<Field>.Failure(CreateFieldError.InvalidData, ex.Message);
         }
-        catch (DbUpdateException ex) when (IsDuplicateKeyViolation(ex))
+        catch (DbUpdateException ex)when (IsDuplicateKeyViolation(ex))
         {
-            logger.LogWarning(ex,
-                "Duplicate key violation creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
-                command.SoilType,
-                command.LocationLatLong);
-            return Result<Field>.Failure(
-                CreateFieldError.DuplicateField, "Database duplicate key violation occurred.");
+            logger.LogWarning(ex, "Duplicate key violation creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}", command.SoilType, command.LocationLatLong);
+            return Result<Field>.Failure(CreateFieldError.DuplicateField, "Database duplicate key violation occurred.");
         }
         catch (DbUpdateException ex)
         {
-            logger.LogError(ex,
-                "Database update failed creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
-                command.SoilType,
-                command.LocationLatLong);
-            return Result<Field>.Failure(
-                CreateFieldError.UnexpectedError, "Database update failed.");
+            logger.LogError(ex, "Database update failed creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}", command.SoilType, command.LocationLatLong);
+            return Result<Field>.Failure(CreateFieldError.UnexpectedError, "Database update failed.");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex,
-                "Unexpected error creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
-                command.SoilType,
-                command.LocationLatLong);
-            return Result<Field>.Failure(
-                CreateFieldError.UnexpectedError, ex.Message);
+            logger.LogError(ex, "Unexpected error creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}", command.SoilType, command.LocationLatLong);
+            return Result<Field>.Failure(CreateFieldError.UnexpectedError, ex.Message);
         }
     }
-    
-    public async Task<Result<Field>> Handle(UpdateFieldCommand command,
-        CancellationToken cancellationToken = default)
+
+    public async Task<Result<Field>> Handle(UpdateFieldCommand command, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -85,15 +56,12 @@ public class FieldCommandService(
             if (field is null)
             {
                 logger.LogWarning("Field with id {Id} not found for update", command.Id);
-                return Result<Field>.Failure(
-                    CreateFieldError.FieldNotFound,
-                    $"Field with id {command.Id} not found.");
+                return Result<Field>.Failure(CreateFieldError.FieldNotFound, $"Field with id {command.Id} not found.");
             }
-            
+
             field.Update(command);
             fieldRepository.Update(field);
             await unitOfWork.CompleteAsync(cancellationToken);
-
             logger.LogInformation("Field {Id} updated successfully", command.Id);
             return Result<Field>.Success(field);
         }
@@ -113,7 +81,7 @@ public class FieldCommandService(
             return Result<Field>.Failure(CreateFieldError.UnexpectedError, ex.Message);
         }
     }
-    
+
     public async Task<Result<Field>> Handle(DeleteFieldCommand command, CancellationToken cancellationToken = default)
     {
         try
@@ -122,14 +90,11 @@ public class FieldCommandService(
             if (field is null)
             {
                 logger.LogWarning("Field with id {Id} not found for deletion", command.Id);
-                return Result<Field>.Failure(
-                    CreateFieldError.FieldNotFound,
-                    $"Field with id {command.Id} not found.");
+                return Result<Field>.Failure(CreateFieldError.FieldNotFound, $"Field with id {command.Id} not found.");
             }
 
             fieldRepository.Remove(field);
             await unitOfWork.CompleteAsync(cancellationToken);
-
             logger.LogInformation("Field {Id} deleted successfully", command.Id);
             return Result<Field>.Success(field);
         }
@@ -139,18 +104,18 @@ public class FieldCommandService(
             return Result<Field>.Failure(CreateFieldError.UnexpectedError, ex.Message);
         }
     }
-    
+
     private static bool IsDuplicateKeyViolation(DbUpdateException exception)
     {
         for (Exception? current = exception; current is not null; current = current.InnerException)
         {
-            if (!string.Equals(current.GetType().Name, "MySqlException", StringComparison.Ordinal)) continue;
+            if (!string.Equals(current.GetType().Name, "MySqlException", StringComparison.Ordinal))
+                continue;
             var numberProperty = current.GetType().GetProperty("Number");
-            if (numberProperty?.PropertyType == typeof(int) &&
-                numberProperty.GetValue(current) is int errorCode &&
-                errorCode == 1062)
+            if (numberProperty?.PropertyType == typeof(int) && numberProperty.GetValue(current)is int errorCode && errorCode == 1062)
                 return true;
         }
+
         return false;
     }
 }

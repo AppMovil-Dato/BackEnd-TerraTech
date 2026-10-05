@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates;
 using NovaTech.TerraTech.Platform.Iam.Interface.Rest.Resources;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
+
 namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest;
 [ApiController, Route("api/v1/users")]
 public class UsersController(NovaTech.TerraTech.Platform.Iam.Application.Internal.CommandServices.AccountService accounts) : ControllerBase

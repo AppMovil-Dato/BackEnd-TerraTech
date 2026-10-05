@@ -1,5 +1,4 @@
-﻿namespace NovaTech.TerraTech.Platform.Shared.Resources;
-
+namespace NovaTech.TerraTech.Platform.Shared.Resources;
 public class CommonMessages
 {
 }

@@ -3,7 +3,6 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 
 namespace NovaTech.TerraTech.Platform.Shared.Infrastructure.Hosting;
-
 public sealed class DatabaseReadinessCheck(IServiceScopeFactory scopeFactory) : IHealthCheck
 {
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
@@ -20,7 +19,6 @@ public sealed class DatabaseReadinessCheck(IServiceScopeFactory scopeFactory) : 
         }
         catch (Exception)
         {
-            // Health responses must not disclose connection strings or database errors.
             return HealthCheckResult.Unhealthy("Database is unavailable.");
         }
     }

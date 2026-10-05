@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using NovaTech.TerraTech.Platform.AnalyticsManagement.Application.Errors;
 using NovaTech.TerraTech.Platform.AnalyticsManagement.Application.Services;
 using NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.Aggregates;
@@ -9,12 +9,7 @@ using NovaTech.TerraTech.Platform.Shared.Application.Model;
 using NovaTech.TerraTech.Platform.Shared.Domain.Repositories;
 
 namespace NovaTech.TerraTech.Platform.AnalyticsManagement.Application.Internal.CommandServices;
-
-public class ReportCommandService(
-    IReportRepository reportRepository,
-    IUnitOfWork unitOfWork,
-    ILogger<ReportCommandService> logger)
-    : IReportCommandService
+public class ReportCommandService(IReportRepository reportRepository, IUnitOfWork unitOfWork, ILogger<ReportCommandService> logger) : IReportCommandService
 {
     public async Task<Result<Report>> Handle(CreateReportCommand command, CancellationToken cancellationToken = default)
     {
@@ -24,8 +19,7 @@ public class ReportCommandService(
         if (existing != null)
         {
             logger.LogWarning("Duplicate report for DeviceId {DeviceId} on {GeneratedAt}", command.DeviceId, command.GeneratedAt);
-            return Result<Report>.Failure(CreateReportError.DuplicateReport,
-                "A report for this device on the same date already exists.");
+            return Result<Report>.Failure(CreateReportError.DuplicateReport, "A report for this device on the same date already exists.");
         }
 
         try
@@ -40,7 +34,7 @@ public class ReportCommandService(
             logger.LogWarning(ex, "Invalid arguments while creating report for DeviceId {DeviceId}", command.DeviceId);
             return Result<Report>.Failure(CreateReportError.UnexpectedError, ex.Message);
         }
-        catch (DbUpdateException ex) when (IsDuplicateKeyViolation(ex))
+        catch (DbUpdateException ex)when (IsDuplicateKeyViolation(ex))
         {
             logger.LogWarning(ex, "Duplicate key violation creating report for DeviceId {DeviceId}", command.DeviceId);
             return Result<Report>.Failure(CreateReportError.DuplicateReport, "Database duplicate key violation occurred.");
@@ -61,16 +55,16 @@ public class ReportCommandService(
     {
         for (Exception? current = exception; current is not null; current = current.InnerException)
         {
-            if (!string.Equals(current.GetType().Name, "MySqlException", StringComparison.Ordinal)) continue;
+            if (!string.Equals(current.GetType().Name, "MySqlException", StringComparison.Ordinal))
+                continue;
             var numberProperty = current.GetType().GetProperty("Number");
-            if (numberProperty?.PropertyType == typeof(int) &&
-                numberProperty.GetValue(current) is int errorCode &&
-                errorCode == 1062)
+            if (numberProperty?.PropertyType == typeof(int) && numberProperty.GetValue(current)is int errorCode && errorCode == 1062)
                 return true;
         }
+
         return false;
     }
-    
+
     public async Task<Result<Report>> Handle(UpdateReportCommand command, CancellationToken cancellationToken = default)
     {
         try
@@ -79,21 +73,12 @@ public class ReportCommandService(
             if (report is null)
             {
                 logger.LogWarning("Report with id {Id} not found for update", command.Id);
-                return Result<Report>.Failure(
-                    UpdateReportError.ReportNotFound,
-                    $"Report with id {command.Id} not found.");
+                return Result<Report>.Failure(UpdateReportError.ReportNotFound, $"Report with id {command.Id} not found.");
             }
 
-            // Update entity (value objects will validate)
-            report.UpdateStatistics(
-                command.MeanValue,
-                command.Variance,
-                command.StandardDeviation,
-                command.TechnicalInterpretation);
-        
+            report.UpdateStatistics(command.MeanValue, command.Variance, command.StandardDeviation, command.TechnicalInterpretation);
             reportRepository.Update(report);
             await unitOfWork.CompleteAsync(cancellationToken);
-        
             logger.LogInformation("Report {Id} updated successfully", command.Id);
             return Result<Report>.Success(report);
         }

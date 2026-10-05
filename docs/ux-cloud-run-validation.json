@@ -1,0 +1,12 @@
+{
+  "/health/live": 200,
+  "/health/ready": 200,
+  "fieldBoundaryInContract": true,
+  "signupSessionInContract": true,
+  "revision": "backend-terratech-git-00007-qb5",
+  "sourceCommit": "2d25830",
+  "image": "us-east1-docker.pkg.dev/terratech-510620/cloud-run-source-deploy/terratech-api:ux-2d25830",
+  "configuration": "Debug",
+  "environment": "Production",
+  "databaseCredentialsChanged": false
+}
